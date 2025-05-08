@@ -1,0 +1,41 @@
+// src/app/api/user/saveMessages/route.ts
+import { NextResponse } from 'next/server'
+import { UserModel } from '@/src/model/User'
+import { NewAuth } from '@/src/app/api/auth/[...nextauth]/options';
+
+export async function POST(request: Request) {
+  const session = await NewAuth();
+  
+  if (!session) {
+    return NextResponse.json({ message: 'Not authenticated' }, { status: 401 })
+  }
+
+  try {
+      const { content } = await request.json()
+      // console.log(content)
+
+    if (!content) {
+      return NextResponse.json({ message: 'Invalid input' }, { status: 400 })
+    }
+
+    
+
+    // Save message to the user's saved messages array
+    const user = await UserModel.findById(session.user.id)
+    if (!user) {
+      return NextResponse.json({ message: 'User not found' }, { status: 404 })
+    }
+    user.saved.push({
+        content,
+        createdAt: new Date(),
+      } as any)
+    // Add the new message to saved messages
+    
+    await user.save()
+
+    return NextResponse.json({ message: 'Message saved successfully!' }, { status: 200 })
+  } catch (error) {
+    console.error('Error saving message:', error)
+    return NextResponse.json({ message: 'Error saving message' }, { status: 500 })
+  }
+}
