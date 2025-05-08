@@ -51,7 +51,7 @@ export default function AiChat() {
         );
       }
 
-    } catch (err: any) {
+    } catch (err:any) {
       if (err.name !== 'AbortError') {
         setMessages(prev => [...prev, { text: 'Error fetching response.', isUser: false }]);
       }
