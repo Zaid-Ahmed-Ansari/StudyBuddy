@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { LayoutDashboard, UserCog, Settings, LogOut, Library, LibraryBig, CalendarCheck, NotebookPenIcon, Bot, UserCircle2, NotebookText } from "lucide-react";
+import { LayoutDashboard, UserCog, Settings, LogOut, Library, LibraryBig, CalendarCheck, NotebookPenIcon, Bot, UserCircle2, NotebookText, House } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -46,6 +46,13 @@ export function SidebarDemo() {
       href: "/notes-summarizer",
       icon: (
         <NotebookText className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+     {
+      label: "Study Club",
+      href: "/study-club",
+      icon: (
+        <House className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
     
