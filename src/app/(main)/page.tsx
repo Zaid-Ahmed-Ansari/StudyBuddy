@@ -10,6 +10,6 @@ export default function Home() {
   <HeroGeometric/>
   {/* <HeroSection /> */}
   <Features />
-    <Footer/>
+    
   </>);
 }

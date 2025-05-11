@@ -20,8 +20,7 @@ export async function middleware(request: NextRequest) {
     session &&
     (pathname === "/sign-in" ||
       pathname === "/sign-up" ||
-      pathname === "/verify") ||
-      pathname === "/"
+      pathname === "/verify") 
   ) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }

@@ -48,7 +48,7 @@ const components: { title: string; href: string; description: string }[] = [
 
 const Navbar =() => {
   return (
-    <div className="sticky h-max  pt-3 pb-3 pl-5 pr-5 mx-auto border-2 rounded-full  z-40 mt-3 w-max bg-background/95 backdrop-blur ">
+    <div className="sticky h-max invisible md:visible pt-3 pb-3 pl-5 pr-5 mx-auto border-2 rounded-full  z-40 mt-3 w-max bg-background/95 backdrop-blur ">
     <NavigationMenu>
       <NavigationMenuList>
       <NavigationMenuItem>
