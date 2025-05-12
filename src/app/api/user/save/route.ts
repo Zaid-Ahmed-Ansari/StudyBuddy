@@ -4,6 +4,14 @@ import { UserModel } from '@/src/model/User'
 import { NewAuth } from '@/src/app/api/auth/[...nextauth]/options';
 
 export async function POST(request: Request) {
+  function generateRandomId(length = 12) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let _id = '';
+  for (let i = 0; i < length; i++) {
+    _id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return _id;
+}
   const session = await NewAuth();
   
   if (!session) {
@@ -18,7 +26,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Invalid input' }, { status: 400 })
     }
 
-    
+    const _id = generateRandomId()
 
     // Save message to the user's saved messages array
     const user = await UserModel.findById(session.user.id)
@@ -26,6 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 })
     }
     user.saved.push({
+      _id,
         content,
         createdAt: new Date(),
       } as any)
