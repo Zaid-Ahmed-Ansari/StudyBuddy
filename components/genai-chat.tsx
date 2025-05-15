@@ -64,9 +64,7 @@ export default function AiChat() {
     abortController?.abort();
     setAbortController(null);
     setIsThinking(false);
-    setMessages(prev =>
-      prev.filter((_, i) => i !== prev.length - 1) // remove unfinished bot message
-    );
+    
   };
 
   const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
