@@ -55,7 +55,7 @@ const options = [
 ];
 
 export default function VisualGenerator() {
-  const mermaidRef = useRef<HTMLDivElement>(null);
+  const mermaidRef = useRef(null);
 
   const exportAsPng = async () => {
     if (mermaidRef.current) {
