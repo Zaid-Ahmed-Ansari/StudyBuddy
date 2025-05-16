@@ -40,6 +40,11 @@ const components: { title: string; href: string; description: string }[] = [
     description: "Generates a schedule based on your tasks and deadlines.",
   },
   {
+    title: "Visuals Generator",
+    href: "/visuals-generator",
+    description: "Create diagrams and visual representations.",
+  },
+   {
     title: "Study Club",
     href: "/study-club",
     description: "Create or join study groups where you can chat or do a video call session.",

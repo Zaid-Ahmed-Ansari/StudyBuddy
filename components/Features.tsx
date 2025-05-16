@@ -1,4 +1,4 @@
-import { Bot, CalendarCheck, File, NotebookPen } from "lucide-react"
+import { Bot, CalendarCheck, ChartColumn, File, NotebookPen } from "lucide-react"
 import BentoGrid from "./bento-grid"
 
 
@@ -20,7 +20,16 @@ const Features = () => {
         meta: "24/7 availability",
         tags: ["AI", "Chat"],
         status: "Active",
-        colSpan: 2
+        colSpan: 1
+      },
+       {
+        title: "Visuals Generator",
+        description: "Create Charts, Graphs from your text prompts with AI assistance.",
+        icon: <ChartColumn />,
+        meta: "24/7 availability",
+        tags: ["AI", "Visuals"],
+        status: "Active",
+        colSpan: 1
       },
       {
         title: "Notes Generator",

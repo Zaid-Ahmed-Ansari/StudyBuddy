@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 // Assuming Message interface is exported from here
 import Link from 'next/link';
 import {BentoGrid,BentoCard} from '@/components/ui/bento-grid';
-import { Bookmark, Bot, Home, NotebookPen, NotebookText } from 'lucide-react';
+import { Bookmark, Bot, ChartColumn, Home, NotebookPen, NotebookText } from 'lucide-react';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -58,7 +58,7 @@ export default function DashboardPage() {
         />
         <BentoCard
           name="AI Chat"
-          className="col-span-3 sm:col-span-2"
+          className="col-span-3 sm:col-span-1"
           background={<div className="bg-green-100 h-full" />}
           Icon={Bot}// Replace with an icon component if needed
           description="Talk with your own Study Assistant."
@@ -66,8 +66,18 @@ export default function DashboardPage() {
           cta="Visit your Buddy"
         />
         <BentoCard
+          name="Visuals Generator"
+          className="col-span-3 sm:col-span-1"
+          background={<div className="bg-green-100 h-full" />}
+          Icon={ChartColumn}// Replace with an icon component if needed
+          description="Join or create a study group with your friends. Video call, chat, and more."
+          href="/visuals-generator"
+          cta="Generate Visuals"
+          
+        />
+        <BentoCard
           name="Notes Generator"
-          className="col-span-3 sm:col-span-2"
+          className="col-span-3 sm:col-span-1"
           background={<div className="bg-blue-100 h-full" />}
           Icon={NotebookPen} // Replace with an icon component if needed
           description="Generate notes by giving subject, and topic"
@@ -86,7 +96,7 @@ export default function DashboardPage() {
        
         <BentoCard
           name="Study Club"
-          className="col-span-3 sm:col-span-3"
+          className="col-span-3 sm:col-span-1"
           background={<div className="bg-green-100 h-full" />}
           Icon={Home}// Replace with an icon component if needed
           description="Join or create a study group with your friends. Video call, chat, and more."

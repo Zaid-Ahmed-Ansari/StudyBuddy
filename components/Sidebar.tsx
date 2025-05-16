@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { LayoutDashboard, UserCog, Settings, LogOut, Library, LibraryBig, CalendarCheck, NotebookPenIcon, Bot, UserCircle2, NotebookText, House } from "lucide-react";
+import { LayoutDashboard, UserCog, Settings, LogOut, Library, LibraryBig, CalendarCheck, NotebookPenIcon, Bot, UserCircle2, NotebookText, House, ChartColumn } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -34,18 +34,26 @@ export function SidebarDemo() {
         <NotebookPenIcon className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
-    {
-      label: "Schedule Generator",
-      href: "/schedule-generator",
-      icon: (
-        <CalendarCheck className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
+    
     {
       label: "Notes Summarizer",
       href: "/notes-summarizer",
       icon: (
         <NotebookText className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Visuals Generator",
+      href: "/visuals-generator",
+      icon: (
+        <ChartColumn className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Schedule Generator",
+      href: "/schedule-generator",
+      icon: (
+        <CalendarCheck className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
      {
