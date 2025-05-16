@@ -106,7 +106,7 @@ export default function VisualGenerator() {
 
   const [dataPoints, setDataPoints] = useState([{ label: "", value: "" }]);
 
-  const extractMermaidCode = (text: string) => {
+  const extractMermaidCode = (text) => {
     const match = text.match(/```mermaid([\s\S]*?)```/);
     return match ? match[1].trim() : text.trim();
   };
@@ -184,8 +184,8 @@ export default function VisualGenerator() {
         const xEnd = Number(xMax);
         const step = Number(xStep);
 
-        const xValues: number[] = [];
-        const yValues: number[] = [];
+        const xValues = [];
+        const yValues = [];
 
         let node;
         try {
@@ -267,7 +267,7 @@ export default function VisualGenerator() {
     }
   };
 
-  const updateDataPoint = (index: number, field: string, value: string) => {
+  const updateDataPoint = (index, field, value) => {
     const updated = [...dataPoints];
     updated[index][field] = value;
     setDataPoints(updated);
@@ -317,7 +317,7 @@ export default function VisualGenerator() {
                       ? "bg-accent/10 font-semibold text-accent"
                       : "hover:bg-muted"
                   }`}
-                  onClick={() => setChartType(type as "bar" | "pie" | "line")}
+                  onClick={() => setChartType(type)}
                 >
                   {type.charAt(0).toUpperCase() + type.slice(1)} Chart
                 </button>
