@@ -97,12 +97,12 @@ export default function VisualGenerator() {
   const [mode, setMode] = useState("flowchart");
   const [prompt, setPrompt] = useState("");
   const [output, setOutput] = useState("");
-  const [graphData, setGraphData] = useState<any>(null);
+  const [graphData, setGraphData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [chartTitle, setChartTitle] = useState("");
   const [legendLabel, setLegendLabel] = useState("");
-  const [chartType, setChartType] = useState<"bar" | "pie" | "line">("bar");
+  const [chartType, setChartType] = useState("bar");
 
   const [dataPoints, setDataPoints] = useState([{ label: "", value: "" }]);
 
