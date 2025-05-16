@@ -1,10 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
 @custom-variant dark (&:is(.dark *));
 @layer utilities {
 
-  
+  .prose{
+    
+  }
   .bg-chat-user {
     background: linear-gradient(135deg, #4c51bf, #2d3748); /* Accent Colors */
     color: white;

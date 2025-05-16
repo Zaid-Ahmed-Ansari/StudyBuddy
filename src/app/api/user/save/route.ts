@@ -19,8 +19,8 @@ export async function POST(request: Request) {
   }
 
   try {
-      const { content } = await request.json()
-      // console.log(content)
+      const { content, contentType } = await request.json()
+      console.log(content)
 
     if (!content) {
       return NextResponse.json({ message: 'Invalid input' }, { status: 400 })
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       _id,
         content,
         createdAt: new Date(),
+        contentType: contentType || 'plain',
       } as any)
     // Add the new message to saved messages
     

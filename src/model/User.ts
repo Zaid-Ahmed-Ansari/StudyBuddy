@@ -4,7 +4,8 @@ import mongoose, {Schema,Document} from "mongoose";
 export interface Message extends Document{
     content : string;
     createdAt: Date;
-    _id: string
+    _id: string;
+    contentType?: 'plain' | 'markdown';
 }
 export interface User extends Document{
     username: string;
@@ -33,6 +34,11 @@ const MessageSchema: Schema<Message> = new Schema({
     _id:{
         type: String,
         required: true
+    },
+    contentType:{
+        type: String,
+        enum: ['plain', 'markdown'],
+        default: 'plain'
     }
 })
 const UserSchema: Schema<User> = new Schema({

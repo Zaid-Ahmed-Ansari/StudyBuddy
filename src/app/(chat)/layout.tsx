@@ -6,6 +6,7 @@ import  Navbar  from "@/components/Navbar";
 
 import AuthProvider from "@/src/context/AuthProvider";
 import { SidebarDemo } from "@/components/Sidebar";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,7 @@ export default function RootLayout({
       <AuthProvider>
 
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-auto`}
         >
           
           <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-zinc-900 to-accent dark:from-black dark:via-zinc-800/40 dark:to-black px-4">
@@ -54,6 +55,7 @@ export default function RootLayout({
           <div className="w-full">
           <Navbar/>
           {children}
+          <Toaster/>
           </div>
         </div>
         

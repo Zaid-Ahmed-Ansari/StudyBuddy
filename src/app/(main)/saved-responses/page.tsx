@@ -5,26 +5,27 @@ import { Message } from '@/src/model/User';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
 
 export default function Saved() {
   const { data: session } = useSession();
   const user = session?.user;
   const [savedMessages, setSavedMessages] = useState<Message[]>([]);
-  const handleDelete = async (id:string)=>{
-      try {
-        const res = await axios.delete('/api/user/delete',{
-          data: {id}
-        })
-        if (res.status === 200) {
-          // Remove the deleted message from the UI
-          setSavedMessages(savedMessages.filter(msg => msg._id !== id));
-        } else {
-          console.error('Failed to delete the message');
-        }
-      } catch (error) {
-        console.error(error)
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await axios.delete('/api/user/delete', {
+        data: { id },
+      });
+      if (res.status === 200) {
+        setSavedMessages(savedMessages.filter((msg) => msg._id !== id));
+      } else {
+        console.error('Failed to delete the message');
       }
-  }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const fetchSavedMessages = async () => {
@@ -33,14 +34,12 @@ export default function Saved() {
         const data = await res.json();
         setSavedMessages(data.saved || []);
       } catch (error) {
-        console.error("Failed to load saved messages", error);
+        console.error('Failed to load saved messages', error);
       }
     };
 
     if (user?.id) fetchSavedMessages();
   }, [user?.id]);
-  
-  
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">
@@ -51,34 +50,34 @@ export default function Saved() {
           <p>No saved responses yet.</p>
         </div>
       ) : (
-        <div>
+        <div className="space-y-6">
           {savedMessages.map((msg) => (
-            <div
-              key={msg._id}
-              className="group bg-background border border-muted rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 ease-in-out flex justify-between mb-2"
-            >
-              <p className="text-sm text-foreground leading-relaxed">{msg.content}</p>
-              <p className="text-sm text-foreground leading-relaxed">{new Date(msg.createdAt).toLocaleString()}</p>
-              <Button
-              
-              onClick={()=> handleDelete(msg._id)}>
+  <div
+    key={msg._id}
+    className="group bg-background border border-muted rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 ease-in-out mb-4"
+  >
+    <div className="text-sm text-foreground leading-relaxed">
+      <ReactMarkdown>
+        {msg.content}
+      </ReactMarkdown>
+              </div>
 
-              <Trash2 className=''/>
-              </Button>
+              <div className="flex justify-between items-center text-sm text-muted-foreground">
+                <time >
+                  {new Date(msg.createdAt).toLocaleString()}
+                </time>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(msg._id)}
+                  aria-label="Delete saved message"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
-        // <ul className="space-y-4 max-h-[32rem] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-accent/70 scrollbar-track-transparent">
-        //   {savedMessages.map((msg, idx) => (
-        //     <li
-        //       key={idx}
-        //       className="group bg-background border border-muted rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
-        //     >
-        //       <p className="text-sm text-foreground leading-relaxed">{msg.content}</p>
-        //       <Trash2 className=''/>
-        //     </li>
-        //   ))}
-        // </ul>
       )}
     </div>
   );
