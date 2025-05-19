@@ -51,16 +51,7 @@ const Features = () => {
         tags: ["Notes", "AI"],
         colSpan: 1,
       },
-      {
-        title: "Schedule Generator",
-        meta: "Strctured",
-        description:
-            "Create a personalized study schedule based on your preferences and deadlines.",
-        icon: <CalendarCheck/>,
-        status: "Active",
-        tags: ["Notes", "AI"],
-        colSpan: 2,
-      },
+      
     ]
    }
    />

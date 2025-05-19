@@ -49,13 +49,7 @@ export function SidebarDemo() {
         <ChartColumn className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
-    {
-      label: "Schedule Generator",
-      href: "/schedule-generator",
-      icon: (
-        <CalendarCheck className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-    },
+    
      {
       label: "Study Club",
       href: "/study-club",

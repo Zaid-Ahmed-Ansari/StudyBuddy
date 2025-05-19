@@ -30,15 +30,11 @@ const components: { title: string; href: string; description: string }[] = [
   },
   {
     title: "Notes Summarizer",
-    href: "/",
+    href: "/notes-summarizer",
     description:
       "Summarizes your notes to help you focus on the most important points.",
   },
-  {
-    title: "Schedule Generator",
-    href: "/",
-    description: "Generates a schedule based on your tasks and deadlines.",
-  },
+  
   {
     title: "Visuals Generator",
     href: "/visuals-generator",

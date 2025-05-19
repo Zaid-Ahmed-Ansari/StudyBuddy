@@ -10,6 +10,9 @@ export async function middleware(request: NextRequest) {
     "/ai-chat",
     "/notes-generator",
     "/schedule-generator",
+    "/notes-summarizer",
+    "/visuals-generator",
+    "/study-club"
   ];
 
   if (!session && protectedRoutes.some(route => pathname.startsWith(route))) {
@@ -37,6 +40,9 @@ export const config = {
     "/sign-in",
     "/sign-up",
     "/verify/:path*",
-    "/"
+    "/",
+    "/notes-summarizer",
+    "/visuals-generator",
+    "/study-club/:path*"
   ],
 };

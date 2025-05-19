@@ -33,7 +33,7 @@ export default function RootLayout({
       <AuthProvider>
 
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-auto`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
         >
           
           <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-zinc-900 to-accent dark:from-black dark:via-zinc-800/40 dark:to-black px-4">

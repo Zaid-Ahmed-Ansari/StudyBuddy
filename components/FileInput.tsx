@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Upload, FileText, X } from "lucide-react";
 
 export default function FileInput({
@@ -9,9 +9,9 @@ export default function FileInput({
   onFilesSelect: (files: File[]) => void;
 }) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const processFiles = (files: File[]) => {
     const allowedFiles = files.filter(file =>
       ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(file.type)
     );
@@ -24,6 +24,28 @@ export default function FileInput({
     onFilesSelect(newFiles);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    processFiles(files);
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files || []);
+    processFiles(files);
+  }, [selectedFiles]);
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
   const removeFile = (fileName: string) => {
     const updatedFiles = selectedFiles.filter(file => file.name !== fileName);
     setSelectedFiles(updatedFiles);
@@ -32,12 +54,17 @@ export default function FileInput({
 
   return (
     <div className="w-full">
-      <label
-        htmlFor="multi-file-upload"
-        className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-accent/50 group hover:bg-accent/70 transition-colors"
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+          ${isDragging ? 'border-accent/70 bg-accent' : 'border-gray-300 hover:border-accent/50 hover:bg-accent/70'}
+        `}
+        onClick={() => document.getElementById("multi-file-upload")?.click()}
       >
         <Upload className="h-8 w-8 text-accent/60 mb-2" />
-        <p className="text-sm text-gray-700 group-hover:text-black font-medium">
+        <p className="text-sm text-gray-700 font-medium">
           Click or drag files to upload
         </p>
         <p className="text-xs text-gray-500">
@@ -51,7 +78,7 @@ export default function FileInput({
           className="hidden"
           onChange={handleFileChange}
         />
-      </label>
+      </div>
 
       {selectedFiles.length > 0 && (
         <ul className="mt-4 space-y-2 max-h-60 overflow-y-auto">

@@ -43,10 +43,10 @@ export default function Card_10() {
                 </div>
 
                 <div className="p-5 space-y-5">
-                    <div className="flex items-center gap-3 p-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+                    <div className="flex items-center gap-3 p-3  dark:bg-zinc-800 rounded-xl">
                         
                         <div>
-                            <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                            <div className="text-sm font-medium  dark:text-zinc-100">
                                 {session?.user?.username}
                             </div>
                             <div className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -59,7 +59,7 @@ export default function Card_10() {
                         {["position", "wait"].map((type) => (
                             <div
                                 key={type}
-                                className="bg-zinc-100 dark:bg-zinc-800 rounded-xl p-3"
+                                className=" dark:bg-zinc-800 rounded-xl p-3"
                             >
                                 {type === "position" ? (
                                     <>
@@ -67,7 +67,7 @@ export default function Card_10() {
                                             Update
                                         </span>
                                         <div className="flex items-baseline mt-1">
-                                            <span className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+                                            <span className="text-xl font-semibold  dark:text-zinc-100">
                                                 your
                                             </span>
                                             <span className="text-xs text-zinc-500 dark:text-zinc-400 ml-1">

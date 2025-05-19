@@ -23,8 +23,8 @@ export default function DashboardPage() {
         </div>
         <div>
         <button
-          onClick={() => signOut()}
-          className="mt-4 sm:mt-0 px-4 hover:cursor-pointer py-2 bg-accent hover:bg-accent/70 text-white rounded-md transition"
+          
+          className="mt-4 sm:mt-0 px-4  py-2 bg-accent hover:bg-accent/70 text-white rounded-md transition"
           >
           Party Code: {user.partyCode}
         </button>

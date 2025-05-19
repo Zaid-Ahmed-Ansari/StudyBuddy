@@ -1,11 +1,11 @@
 import { rateLimit } from '@/src/lib/rate-limit';
-import { google } from '@ai-sdk/google';
-import { generateText } from 'ai';
+import {GoogleGenAI} from '@google/genai';
 import { NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
 export async function POST(req: Request) {
+  const ai = new GoogleGenAI({apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY});
   const { mode, prompt, xLabel, yLabel, dataPoints } = await req.json();
   const ip = req.headers.get('x-forwarded-for') || 'unknown';
 
@@ -19,11 +19,11 @@ export async function POST(req: Request) {
 
   try {
     if (mode === 'flowchart') {
-      const { text } = await generateText({
-        model: google('gemini-1.5-flash'),
-        prompt: `Generate a clean, valid Mermaid.js flowchart diagram for this description: "${prompt}". 
+      const { text } =  await ai.models.generateContent({
+        model:'gemini-2.0-flash-001',
+        contents: `Generate a clean, valid Mermaid.js flowchart diagram for this description: "${prompt}". 
            ONLY return the Mermaid diagram code between triple backticks \`\`\`mermaid ... \`\`\`.
-           Do NOT include any explanation, extra text, or markdown outside the code block.`,
+           Do NOT include any explanation, extra text, or markdown outside the code block. Process the code properly for ERD's`,
       });
 
       return NextResponse.json({ mermaid: text });

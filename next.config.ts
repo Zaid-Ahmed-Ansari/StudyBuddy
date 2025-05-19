@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+
+  experimental: {
+     ppr: 'incremental',},
   /* config options here */
   env: {
     AUTH_SECRET: process.env.AUTH_SECRET,
