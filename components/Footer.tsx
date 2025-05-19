@@ -31,7 +31,7 @@ export default function Footer() {
               href="/ai-chat"
               className="hover:text-accent transition-colors duration-200"
               >
-                AI studybuddy
+                AI Chatbot
               </Link>
               <Link
               href="/notes-generator"

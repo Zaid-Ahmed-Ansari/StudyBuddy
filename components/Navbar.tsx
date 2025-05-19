@@ -17,7 +17,7 @@ import {
 
 const components: { title: string; href: string; description: string }[] = [
   {
-    title: "AI Study Buddy",
+    title: "AI Chatbot",
     href: "/ai-chat",
     description:
       "An AI-powered study buddy that helps you learn and understand concepts better.",
