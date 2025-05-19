@@ -42,7 +42,7 @@
     "mongoose": "^8.13.2",
     "motion": "^12.9.4",
     "mysterymessage": "file:",
-    "next": "^15.4.0-canary.37",
+    "next": "^15.3.2",
     "next-auth": "^5.0.0-beta.25",
     "next-themes": "^0.4.6",
     "nextjs": "^0.0.3",
