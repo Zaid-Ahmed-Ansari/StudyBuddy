@@ -53,7 +53,7 @@ export default function RootLayout({
             <SidebarDemo/>
           </div>
           <div className="w-full">
-          <Navbar/>
+          {/* <Navbar/> */}
           {children}
           <Toaster/>
           </div>

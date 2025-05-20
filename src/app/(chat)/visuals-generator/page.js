@@ -7,7 +7,7 @@ import { Bar, Pie, Line } from "react-chartjs-2";
 
 import jsPDF from "jspdf";
 
-import { ChartColumn, BarChart, ChartBar } from "lucide-react";
+import { ChartColumn, BarChart, ChartBar, NotebookPen } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import {
@@ -278,7 +278,15 @@ export default function VisualGenerator() {
   };
 
   return (
+    <div>
+       <header className="p-4 text-center border mt-5 mr-5 ml-5 rounded-full text-2xl font-bold  shadow-xl">
+                <div className="flex items-center justify-center mb-2 gap-2">
+                  <ChartColumn size={24} className="text-accent" />
+                  <span className='text-accent'>Visuals Generator</span>
+                </div>
+              </header>
     <div className="flex w-full min-h-screen px-6 py-10 gap-6">
+      
       {/* Sidebar */}
       <div className="w-52 rounded-2xl border border-accent/20 shadow-2xl p-4">
         <h3 className="text-lg font-semibold mb-4">Select Type</h3>
@@ -290,9 +298,9 @@ export default function VisualGenerator() {
                   mode === opt.key
                     ? "border-accent text-accent font-bold"
                     : "border-muted text-muted-foreground"
-                }`}
-                onClick={() => setMode(opt.key)}
-              >
+                  }`}
+                  onClick={() => setMode(opt.key)}
+                  >
                 {opt.icon}
                 {opt.label}
               </button>
@@ -300,10 +308,10 @@ export default function VisualGenerator() {
           ))}
         </ul>
       </div>
-
+          
       {/* Main */}
       <div className="flex-1 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">Visual Generator</h1>
+       
 
         {mode === "charts" && (
           <>
@@ -311,14 +319,14 @@ export default function VisualGenerator() {
               <h4 className="text-sm font-semibold">Select Chart Type</h4>
               {["bar", "pie", "line"].map((type) => (
                 <button
-                  key={type}
-                  className={`w-full max-w-[200px] shadow-lg border flex text-left px-3 py-1 rounded-lg ${
+                key={type}
+                className={`w-full max-w-[200px] shadow-lg border flex text-left px-3 py-1 rounded-lg ${
                     chartType === type
-                      ? "bg-accent/10 font-semibold text-accent"
-                      : "hover:bg-muted"
+                    ? "bg-accent/10 font-semibold text-accent"
+                    : "hover:bg-muted"
                   }`}
                   onClick={() => setChartType(type)}
-                >
+                  >
                   {type.charAt(0).toUpperCase() + type.slice(1)} Chart
                 </button>
               ))}
@@ -339,7 +347,7 @@ export default function VisualGenerator() {
                   className="w-full p-2 border border-muted rounded-md"
                   value={legendLabel}
                   onChange={(e) => setLegendLabel(e.target.value)}
-                />
+                  />
               </div>
 
               {dataPoints.map((point, idx) => (
@@ -351,7 +359,7 @@ export default function VisualGenerator() {
                     onChange={(e) =>
                       updateDataPoint(idx, "label", e.target.value)
                     }
-                  />
+                    />
                   <input
                     placeholder="Value"
                     type="number"
@@ -360,13 +368,13 @@ export default function VisualGenerator() {
                     onChange={(e) =>
                       updateDataPoint(idx, "value", e.target.value)
                     }
-                  />
+                    />
                 </div>
               ))}
               <button
                 onClick={addDataPoint}
                 className="text-sm underline text-accent hover:text-accent/80"
-              >
+                >
                 + Add Data Point
               </button>
             </div>
@@ -375,15 +383,15 @@ export default function VisualGenerator() {
 
         {mode === "flowchart" && (
           <textarea
-            rows={3}
-            className="w-full p-3 border border-accent/40 rounded-xl shadow-sm resize-none"
-            placeholder={`Enter prompt for ${mode} generation...`}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+          rows={3}
+          className="w-full p-3 border border-accent/40 rounded-xl shadow-sm resize-none"
+          placeholder={`Enter prompt for ${mode} generation...`}
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
           />
         )}
         {mode === "graphs" && (
-      <div className="space-y-4">
+          <div className="space-y-4">
         <label className="block font-semibold">Function (in x):</label>
         <input
           type="text"
@@ -391,7 +399,7 @@ export default function VisualGenerator() {
           onChange={(e) => setFuncExpression(e.target.value)}
           className="w-full p-2 border border-muted rounded-md"
           placeholder="e.g. x^2 - 3*x + 2 and for trignometric functions use x in degrees"
-        />
+          />
         <div className="flex gap-4">
           <div>
             <label className="block font-semibold">x Min</label>
@@ -400,7 +408,7 @@ export default function VisualGenerator() {
               value={xMin}
               onChange={(e) => setXMin(e.target.value)}
               className="p-2 border border-muted rounded-md"
-            />
+              />
           </div>
           <div>
             <label className="block font-semibold">x Max</label>
@@ -409,7 +417,7 @@ export default function VisualGenerator() {
               value={xMax}
               onChange={(e) => setXMax(e.target.value)}
               className="p-2 border border-muted rounded-md"
-            />
+              />
           </div>
           <div>
             <label className="block font-semibold">x Step</label>
@@ -418,7 +426,7 @@ export default function VisualGenerator() {
               value={xStep}
               onChange={(e) => setXStep(e.target.value)}
               className="p-2 border border-muted rounded-md"
-            />
+              />
           </div>
         </div>
       </div>
@@ -429,19 +437,19 @@ export default function VisualGenerator() {
           onClick={generate}
           disabled={loading}
           className="mt-6 bg-accent text-white px-6 py-2 rounded-lg shadow-md hover:bg-accent/90 transition"
-        >
+          >
           {loading ? "Generating..." : "Generate"}
         </button>
                 <button
                   onClick={exportAsPng}
                   className="mt-6 bg-accent text-white px-6 py-2 rounded-lg shadow-md hover:bg-accent/90 transition"
-                >
+                  >
                   Export PNG
                 </button>
                 <button
                   onClick={exportAsPdf}
                   className="mt-6 bg-accent text-white px-6 py-2 rounded-lg shadow-md hover:bg-accent/90 transition"
-                >
+                  >
                   Export PDF
                 </button>
               </div>
@@ -456,7 +464,7 @@ export default function VisualGenerator() {
               <div
                 ref={mermaidRef}
                 className="mermaid text-sm bg-white p-4 rounded-md shadow-inner"
-              >
+                >
                 {output}
               </div>
             </>
@@ -496,8 +504,8 @@ export default function VisualGenerator() {
       )}
       {mode === "graphs" && graphData && (
         <div className="flex justify-end mb-2 gap-4"
-          ref={mermaidRef}  
-          >
+        ref={mermaidRef}  
+        >
 
         <Line data={graphData} options={graphData.options} />
         </div>
@@ -505,5 +513,6 @@ export default function VisualGenerator() {
     </div>
   </div>
 </div>
+      </div>
   );
 }

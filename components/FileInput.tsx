@@ -59,7 +59,7 @@ export default function FileInput({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-          ${isDragging ? 'border-accent/70 bg-accent' : 'border-gray-300 hover:border-accent/50 hover:bg-accent/70'}
+          ${isDragging ? 'border-accent/70 bg-accent' : 'border-gray-300 hover:border-accent/50 hover:bg-accent/10'}
         `}
         onClick={() => document.getElementById("multi-file-upload")?.click()}
       >

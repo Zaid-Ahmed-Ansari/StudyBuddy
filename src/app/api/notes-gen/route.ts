@@ -21,33 +21,38 @@ export async function POST(req: Request) {
   try {
     const { text } =  await ai.models.generateContent({
       model: 'gemini-2.0-flash-001',
-      contents: `You are an expert note-taker.Not in many words but in just enough and provide proper spacing between lines. Generate **detailed, well-organized notes** for the following topics:
+      contents: `You are a precise, expert note-taker skilled in creating concise yet comprehensive study materials. Generate clear, scannable notes for:
 
 **Topic:** ${topic}  
 **Subject:** ${subject}
 
-### Guidelines:
-- The notes should be structured with clear **headings** and **subheadings**.
-- For each **subtopic**:
-  - Provide a **short summary** of the concept.
-  - List all **important points** with bullet points.
-  - Explain key terms or concepts clearly.
-  - Include **examples** or **analogies** where appropriate.
-  - Ensure the notes are **useful for revision**, avoiding unnecessary filler.
-  - Use **Markdown formatting**: headers, bullet points, and clear sections.
+## FORMAT GUIDELINES:
 
-### Example Formatting:
-1. **Introduction**
-   - Summary of the topic
-   - Key points
-   - Explanation with example
-2. **Subtopic 1**
-   - Summary
-   - Key points
-   - Example or analogy
+### STRUCTURE:
+- Use hierarchical organization with H2 (##) for main sections and H3 (###) for subsections
+- Maintain consistent white space between sections (one blank line) for readability
+- Include a brief introduction (2-3 sentences maximum)
 
-Format the output in clean **Markdown** for easy reading. Use headers, bullet points, code blocks, and emojis when necessary to make it engaging and useful.
-Add proper spacing between sections and sub-sections for clarity.
+### FOR EACH SECTION:
+- Begin with a 1-2 sentence definition/overview
+- Use bullet points (•) for key concepts and dash (-) for supporting details
+- Include only essential information that would appear on an exam
+- Highlight **key terms** in bold
+- Add ✏️ before examples and 💡 before important insights
+
+### CONTENT BALANCE:
+- Prioritize clarity over comprehensiveness
+- Include 1-2 targeted examples per major concept
+- Add brief mnemonics or memory aids where helpful
+- For formulas: present in \`\`\`math blocks with a simple application example
+
+### VISUAL ORGANIZATION:
+- Use tables for comparing related concepts
+- Create simple diagrams using ASCII/Unicode when helpful
+- Limit each main section to 5-7 bullet points maximum
+- Include a brief summary (3-4 bullet points) at the end
+
+Keep the total length focused and concise - aim for notes that would fit on 2-3 pages if printed.
 `,
 
     });
