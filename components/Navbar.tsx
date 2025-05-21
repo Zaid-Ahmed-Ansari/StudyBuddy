@@ -79,13 +79,13 @@ const Navbar =() => {
                   </Link>
                 </NavigationMenuLink>
               </li>
-              <ListItem href="/docs" title="Introduction">
+              <ListItem href="/" title="Introduction">
                 Learn about the features and capabilities of StuddyBuddy.
               </ListItem>
-              <ListItem href="/docs/installation" title="On your device">
+              <ListItem href="/" title="On your device">
                 No need to install anything, just open the app and start using it.
               </ListItem>
-              <ListItem href="/docs/installation" title="AI">
+              <ListItem href="/" title="AI">
                 Integrate AI into your study routine and enhance your learning experience.
               </ListItem>
               
@@ -124,24 +124,26 @@ const Navbar =() => {
 const ListItem = React.forwardRef<
   React.ElementRef<"a">,
   React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
+>(({ className, title,href, children, ...props }, ref) => {
   return (
     <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent/70 hover:text-accent-foreground/70 focus:bg-accent/70 focus:text-accent-foreground/70",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
+     <Link href={href} passHref>
+        <NavigationMenuLink asChild>
+          <a
+            ref={ref}
+            className={cn(
+              "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent/70 hover:text-accent-foreground/70 focus:bg-accent/70 focus:text-accent-foreground/70",
+              className
+            )}
+            {...props}
+          >
+            <div className="text-sm font-medium leading-none">{title}</div>
+            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+              {children}
+            </p>
+          </a>
+        </NavigationMenuLink>
+      </Link>
     </li>
   )
 })
