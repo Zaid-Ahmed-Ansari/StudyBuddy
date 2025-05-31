@@ -11,7 +11,7 @@ type Props = {
   }
 }
 
-export default async function Page({ params }: Props) {
+export default async function Landing({ params }: Props) {
   const { userId, chatId } = params
 
   return (
