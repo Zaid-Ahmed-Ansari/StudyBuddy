@@ -4,12 +4,12 @@ import { NewAuth } from '@/src/app/api/auth/[...nextauth]/options';
 import { UserModel } from '@/src/model/User';
 import { encrypt } from '@/src/lib/encryption';
 
-export async function POST(req: Request, { params }: { params: { chatId: string } }) {
-  const { chatId } = params;
+export async function POST(req: Request, context: { params: { chatId: string } }) {
+  const { chatId } = context.params;
 
   try {
     await dbConnect();
-    const session = await NewAuth();
+    const session = await NewAuth();  
 
     if (!session?.user?.email) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), { status: 401 });
