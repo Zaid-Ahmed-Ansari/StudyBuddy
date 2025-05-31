@@ -23,7 +23,7 @@ import { IUser } from "@/src/model/User"
 const Navbar =() => {
 
   const { data: session } = useSession();
-  const user = session?.user as IUser;
+  const user = session?.user 
   const components: { title: string; href: string; description: string }[] = [
   {
     title: "AI Chatbot",
