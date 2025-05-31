@@ -1,21 +1,23 @@
+// src/app/(chat)/ai-chat/[userId]/[chatId]/page.tsx
+
+import React from 'react'
 import AiChat from '@/components/ai-chat'
 import ChatSidebar from '@/components/chatSidebar'
-import React from 'react'
-interface PageProps {
+
+type Props = {
   params: {
-    chatId: string
     userId: string
+    chatId: string
   }
 }
-export default async function Page ({params}: PageProps) {
-  const { chatId, userId } =  params;
+
+export default async function Page({ params }: Props) {
+  const { userId, chatId } = params
 
   return (
     <div>
-      <AiChat chatId={chatId} userId={userId}/>
-      <ChatSidebar/>
+      <AiChat userId={userId} chatId={chatId} />
+      <ChatSidebar />
     </div>
   )
 }
-
-

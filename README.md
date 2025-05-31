@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📚 StudyBuddy – Your AI-Powered Study Partner
 
-## Getting Started
+StudyBuddy is a modern web platform designed to help students collaborate, learn, and stay organized. Powered by AI, StudyBuddy allows users to chat with an AI tutor, generate study notes, visualize concepts (charts, flowcharts, math), and create or join real-time study groups.
 
-First, run the development server:
+---
+##Live 
+www.studybuddy.rest
+
+## 🚀 Features
+
+### 🤖 AI Assistant
+- Chat with an AI tutor for study-related questions
+- Save and copy AI-generated answers
+- Streaming responses with "Abort" button
+- Persistent chat history with multiple separate conversations
+
+### 📒 AI Notes Generator
+- Generate structured notes based on selected subject and topic
+- Supports DOC and DOCX uploads for summarization
+- Save, copy, and re-generate notes with ease
+
+### 🧠 Visual Generator
+- Create charts (bar, pie, line), flowcharts (Mermaid.js), and math/trig equations
+- Just enter a simple phrase — AI does the rest
+- Editable input for custom graphs and improved learning
+
+### 👨‍🏫 Study Clubs
+- Create or join real-time study groups
+- Admin dashboard to accept/reject join requests
+- Invite friends using a unique code
+- Built-in video/audio support and collaborative PDF viewer (Coming soon)
+
+### 🔐 Authentication
+- Secure login/signup with credentials
+- Fully integrated user sessions using NextAuth.js
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 14+ (App Router)](https://nextjs.org/)
+- **Backend**: Node.js, [Mongoose (MongoDB)](https://mongoosejs.com/)
+- **Authentication**: [NextAuth.js](https://next-auth.js.org/)
+- **AI API**: Google Gemini Pro via [Vercel AI SDK](https://vercel.com/docs/ai)
+- **Real-Time UI**: React Server Components, Suspense, and App Router's Streaming
+- **Design**: Tailwind CSS, shadcn/ui, Lucide Icons
+
+---
+
+## 📦 Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+git clone https://github.com/your-username/studybuddy.git
+cd studybuddy
+npm install
