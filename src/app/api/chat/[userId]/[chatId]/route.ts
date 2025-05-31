@@ -51,10 +51,10 @@ export async function DELETE(
 export const dynamic = "force-dynamic" // Optional: for fresh fetch
 
 export async function GET(
-  req: Request,
-  { params }: { params: { chatId: string } }
+  req: Request,context:
+  { params: Promise<{ userId: string; chatId: string; }> } 
 ) {
-  const { chatId } = params
+  const { chatId, userId } = await context.params;
 
   try {
     await dbConnect()
