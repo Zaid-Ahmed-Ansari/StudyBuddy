@@ -3,7 +3,7 @@ import ChatSidebar from '@/components/chatSidebar'
 import React from 'react'
 
 export default async function Page ({params}: {params:{chatId: string,userId: string}}) {
-  const { chatId, userId } = await params;
+  const { chatId, userId } =  params;
 
   return (
     <div>
