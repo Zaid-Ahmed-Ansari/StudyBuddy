@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
+import { useSession } from "next-auth/react"
 
 import {
   NavigationMenu,
@@ -14,11 +15,19 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
+import { IUser } from "@/src/model/User"
 
-const components: { title: string; href: string; description: string }[] = [
+
+
+
+const Navbar =() => {
+
+  const { data: session } = useSession();
+  const user = session?.user as IUser;
+  const components: { title: string; href: string; description: string }[] = [
   {
     title: "AI Chatbot",
-    href: "/ai-chat",
+    href: `/ai-chat/${user?.id}`,
     description:
       "An AI-powered study buddy that helps you learn and understand concepts better.",
   },
@@ -47,7 +56,6 @@ const components: { title: string; href: string; description: string }[] = [
   }
 ]
 
-const Navbar =() => {
   return (
     <div className="sticky h-max invisible md:visible pt-3 pb-3 pl-5 pr-5 mx-auto border-2 rounded-full  z-40 mt-3 w-max bg-background/95 backdrop-blur ">
     <NavigationMenu>

@@ -1,4 +1,4 @@
-import { Bot, CalendarCheck, ChartColumn, File, NotebookPen } from "lucide-react"
+import { Bot, CalendarCheck, ChartColumn, File, Home, NotebookPen } from "lucide-react"
 import BentoGrid from "./bento-grid"
 
 
@@ -14,7 +14,7 @@ const Features = () => {
    items={
     [
       {
-        title: "AI Chat",
+        title: "AI Chatbot",
         description: "Get instant answers to your questions and personalized study tips",
         icon: <Bot />,
         meta: "24/7 availability",
@@ -22,15 +22,7 @@ const Features = () => {
         status: "Active",
         colSpan: 1
       },
-       {
-        title: "Visuals Generator",
-        description: "Create Charts, Graphs from your text prompts with AI assistance.",
-        icon: <ChartColumn />,
-        meta: "24/7 availability",
-        tags: ["AI", "Visuals"],
-        status: "Active",
-        colSpan: 1
-      },
+       
       {
         title: "Notes Generator",
         meta: "Any Topic",
@@ -50,6 +42,24 @@ const Features = () => {
         status: "Active",
         tags: ["Notes", "AI"],
         colSpan: 1,
+      },
+      {
+        title: "Visuals Generator",
+        description: "Create Charts, Graphs from your text prompts with AI assistance.",
+        icon: <ChartColumn />,
+        meta: "24/7 availability",
+        tags: ["AI", "Visuals"],
+        status: "Active",
+        colSpan: 1
+      },
+      {
+        title: "Study Club",
+        description: "Join or create a study group with your friends. Video call, chat, and more.",
+        icon: <Home />,
+        meta: "24/7 availability",
+        tags: ["AI", "Study", "Calls"],
+        status: "Coming Soon",
+        colSpan: 2
       },
       
     ]

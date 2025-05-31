@@ -4,8 +4,7 @@ import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { LayoutDashboard, UserCog, Settings, LogOut, Library, LibraryBig, CalendarCheck, NotebookPenIcon, Bot, UserCircle2, NotebookText, House, ChartColumn } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Image from "next/image";
-import { cn } from "@/lib/utils";
+
 import {User} from "next-auth"
 import { useSession } from "next-auth/react";
 
@@ -14,15 +13,15 @@ export function SidebarDemo() {
   const user = session?.user as User;
   const links = [
     {
-      label: "Dashboard/Logout",
+      label: "Dashboard",
       href: "/dashboard",
       icon: (
         <LayoutDashboard className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
     {
-      label: "AI StudyBuddy",
-      href: "/ai-chat",
+      label: "AI Chatbot",
+      href: `/ai-chat/${user?.id}`,
       icon: (
         <Bot className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
@@ -78,7 +77,7 @@ export function SidebarDemo() {
             <SidebarLink
               link={{
                 label: user?.username || "",
-                href: "/dashboard",
+                href: `/u/${user?.username}`,
                 icon: (
                   <UserCircle2 className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
 

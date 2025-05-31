@@ -454,8 +454,8 @@ export default function VisualGenerator() {
                 </button>
               </div>
 
-        <div className="mt-8 border border-dashed rounded-xl p-6 shadow-md min-h-[200px] bg-white text-black">
-          <h2 className="text-lg font-semibold mb-4">Output</h2>
+        <div className="mt-8 border border-dashed rounded-xl p-6 shadow-md min-h-[200px]  text-black">
+          <h2 className="text-lg text-accent font-semibold mb-4">Output</h2>
 
           {mode === "flowchart" && output && (
             <>
@@ -463,7 +463,7 @@ export default function VisualGenerator() {
 
               <div
                 ref={mermaidRef}
-                className="mermaid text-sm bg-white p-4 rounded-md shadow-inner"
+                className="mermaid text-sm  p-4 rounded-md shadow-inner"
                 >
                 {output}
               </div>

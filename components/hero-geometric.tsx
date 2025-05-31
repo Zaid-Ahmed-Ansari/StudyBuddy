@@ -83,7 +83,7 @@ function ElegantShape({
 }
 
 export default function HeroGeometric({
-  badge = "Studybuddy",
+  badge = "StudyBuddy",
   title1 = "Enhance Your Learning",
   title2 = "Achieve Your Goals",
 }: {

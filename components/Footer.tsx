@@ -1,7 +1,12 @@
+'use client'
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { User } from "@/src/model/User";
 
 // components/Footer.jsx
 export default function Footer() {
+  const {data:session} = useSession()
+  const user = session?.user as User
     return (
       <footer className=" text-foreground py-10 px-6 md:px-16">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -27,12 +32,12 @@ export default function Footer() {
 
               
 
-              <Link
-              href="/ai-chat"
+              {/* <Link
+              href=""
               className="hover:text-accent transition-colors duration-200"
               >
                 AI Chatbot
-              </Link>
+              </Link> */}
               <Link
               href="/notes-generator"
               className="hover:text-accent transition-colors duration-200"

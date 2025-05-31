@@ -2,13 +2,20 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, Check, Send, X, ArrowDown, BookmarkCheck, Bot, User } from 'lucide-react'
+import { Copy, Check, Send, X, ArrowDown, BookmarkCheck, Bot, User, Save } from 'lucide-react'
 import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import 'highlight.js/styles/github-dark.css' // Switched to dark theme for code blocks
+import { useRouter } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 
-export default function AiChat() {
+export default function AiChat({chatId,userId}: {chatId: string,userId: string}) {
+
+  const router = useRouter();
+
+
+
   const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([])
   const [isThinking, setIsThinking] = useState(false)
   const [abortController, setAbortController] = useState<AbortController | null>(null)
@@ -22,6 +29,21 @@ export default function AiChat() {
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  useEffect(() => {
+  const fetchMessages = async () => {
+    if (!chatId) return;
+
+    try {
+      const res = await axios.get(`/api/chat/${userId}/${chatId}`);
+      setMessages(res.data?.messages);
+    } catch (error) {
+      console.error('Failed to load chat messages:', error);
+    }
+  };
+
+  fetchMessages();
+}, [chatId]);
 
   useEffect(() => {
     const container = chatContainerRef.current
@@ -79,7 +101,19 @@ export default function AiChat() {
           idx === prev.length - 1 ? { ...msg, text: streamed } : msg
         )
       );
+      
     }
+    try {
+  await axios.post(`/api/chat/${userId}/${chatId}/message`, {
+    messages: [
+    { text: userMessage, isUser: true, timestamp: new Date().toISOString() },
+    { text: streamed, isUser: false, timestamp: new Date().toISOString() }
+  ]
+  });
+} catch (err) {
+  console.error('Failed to save AI message:', err);
+  // Optionally add an error message to the UI
+}
   } catch (err: any) {
     if (err.name !== 'AbortError') {
       setMessages(prev => [
@@ -120,11 +154,11 @@ export default function AiChat() {
   }
 
   return (
-    <div className="min-h-screen text-white flex flex-col ">
+    <div className="min-h-screen text-white flex flex-col mr-76 ">
       <header className="p-4 text-center font-sans text-2xl font-bold font-mono border rounded-full mt-5  shadow-xl">
         <div className="flex items-center justify-center gap-2">
           <Bot size={24} className="text-accent" />
-          <span className='text-accent'>StudyBuddy Chat</span>
+          <span className='text-accent'>AI Chatbot</span>
         </div>
       </header>
 
@@ -206,8 +240,8 @@ export default function AiChat() {
                         title="Save"
                       >
                         {savedIndex === i ? 
-                          <span className="flex items-center gap-1"><BookmarkCheck size={14} /> Saved</span> : 
-                          <BookmarkCheck size={14} />
+                          <span className="flex items-center gap-1"><Save size={14} /> Saved</span> : 
+                          <Save size={14} />
                         }
                       </button>
                     </div>

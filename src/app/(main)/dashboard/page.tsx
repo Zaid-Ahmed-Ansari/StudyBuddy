@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 // Assuming Message interface is exported from here
 import Link from 'next/link';
 import {BentoGrid,BentoCard} from '@/components/ui/bento-grid';
-import { Bookmark, Bot, ChartColumn, Home, NotebookPen, NotebookText } from 'lucide-react';
+import { Bookmark, Bot, ChartColumn, Home, NotebookPen, NotebookText, Save } from 'lucide-react';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -51,13 +51,13 @@ export default function DashboardPage() {
           name="Saved Responses"
           className="col-span-3 sm:col-span-1"
           background={<div className="bg-blue-100 h-full" />}
-          Icon={Bookmark} // Replace with an icon component if needed
+          Icon={Save} // Replace with an icon component if needed
           description="View and manage your saved AI responses."
           href="/saved-responses"
           cta="View Saved"
         />
         <BentoCard
-          name="AI Chat"
+          name="AI Chatbot"
           className="col-span-3 sm:col-span-1"
           background={<div className="bg-green-100 h-full" />}
           Icon={Bot}// Replace with an icon component if needed
@@ -65,22 +65,13 @@ export default function DashboardPage() {
           href="/ai-chat"
           cta="Visit your Buddy"
         />
-        <BentoCard
-          name="Visuals Generator"
-          className="col-span-3 sm:col-span-1"
-          background={<div className="bg-green-100 h-full" />}
-          Icon={ChartColumn}// Replace with an icon component if needed
-          description="Join or create a study group with your friends. Video call, chat, and more."
-          href="/visuals-generator"
-          cta="Generate Visuals"
-          
-        />
+        
         <BentoCard
           name="Notes Generator"
           className="col-span-3 sm:col-span-1"
           background={<div className="bg-blue-100 h-full" />}
           Icon={NotebookPen} // Replace with an icon component if needed
-          description="Generate notes by giving subject, and topic"
+          description="Generate notes by entering subject and relevant topic."
           href="/notes-generator"
           cta="Generate Notes"
         />
@@ -89,9 +80,19 @@ export default function DashboardPage() {
           className="col-span-3 sm:col-span-1"
           background={<div className="bg-green-100 h-full" />}
           Icon={NotebookText}// Replace with an icon component if needed
-          description="Summarize your notes efficiently by giving text or pdf or docx."
+          description="Summarize your notes efficiently by entering text or uploading PDF or DOCX file."
           href="/notes-summarizer"
           cta="Summarize Notes"
+        />
+        <BentoCard
+          name="Visuals Generator"
+          className="col-span-3 sm:col-span-1"
+          background={<div className="bg-green-100 h-full" />}
+          Icon={ChartColumn}// Replace with an icon component if needed
+          description="Create Charts, Graphs from your text prompts with AI assistance."
+          href="/visuals-generator"
+          cta="Generate Visuals"
+          
         />
        
         <BentoCard
@@ -99,7 +100,7 @@ export default function DashboardPage() {
           className="col-span-3 sm:col-span-1"
           background={<div className="bg-green-100 h-full" />}
           Icon={Home}// Replace with an icon component if needed
-          description="Join or create a study group with your friends. Video call, chat, and more."
+          description="Join or create a study group with your friends. Video calls, chat, and more."
           href="/study-club"
           cta="Join Study Club"
         />

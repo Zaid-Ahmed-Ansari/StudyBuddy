@@ -81,7 +81,7 @@ export default function Card_10() {
                                             With
                                         </span>
                                         <div className="flex items-baseline mt-1">
-                                            <span className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+                                            <span className="text-xl font-semibold text-white dark:text-zinc-100">
                                                 Ease
                                             </span>
                                             <span className="text-xs text-zinc-500 dark:text-zinc-400 ml-1">
