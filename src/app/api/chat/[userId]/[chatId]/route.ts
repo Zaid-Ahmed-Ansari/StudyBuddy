@@ -7,8 +7,8 @@ import mongoose from 'mongoose';
 import { decrypt } from '@/src/lib/encryption';
 
 export async function DELETE(
-  _req: Request,
-  { params }: { params: { userId: string; chatId: string } }
+  _req: Request,context:
+  { params: Promise<{ userId: string; chatId: string; }> } 
 ) {
   try {
     await dbConnect();
@@ -19,7 +19,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId, chatId } = await params;
+    const { userId, chatId } = await context.params;
 
     // Ensure the user making the request matches the target user
     if (session.user.id !== userId) {
