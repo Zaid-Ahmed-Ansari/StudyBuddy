@@ -7,12 +7,12 @@ import { encrypt } from '@/src/lib/encryption'
 import mongoose from 'mongoose'
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { userId: string } }
+  request: NextRequest,context:
+  { params: Promise<{ userId: string; chatId: string; }> } 
 ) {
   try {
     await dbConnect()
-    const awaitedParams = await params
+    const awaitedParams = await context.params
     const userId =  awaitedParams.userId
     const { title } = await request.json()
 
