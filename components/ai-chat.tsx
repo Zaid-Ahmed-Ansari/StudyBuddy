@@ -7,12 +7,11 @@ import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import 'highlight.js/styles/github-dark.css' // Switched to dark theme for code blocks
-import { useRouter } from 'next/navigation'
-import { useParams, useSearchParams } from 'next/navigation'
+
 
 export default function AiChat({chatId,userId}: {chatId: string,userId: string}) {
 
-  const router = useRouter();
+  
 
 
 

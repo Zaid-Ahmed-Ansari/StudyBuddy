@@ -1,18 +1,12 @@
 // src/app/(chat)/ai-chat/[userId]/[chatId]/page.tsx
 
-import React from 'react'
 import AiChat from '@/components/ai-chat'
 import ChatSidebar from '@/components/chatSidebar'
 
-type Props = {
-  params: {
-    userId: string
-    chatId: string
-  }
-}
-
-export default async function Landing({ params }: Props) {
-  const { userId, chatId } = params
+export default async function Page(props: {
+  params: Promise<{ userId: string; chatId: string }>
+}) {
+  const { userId, chatId } = await props.params
 
   return (
     <div>
