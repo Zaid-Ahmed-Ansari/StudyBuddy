@@ -5,12 +5,12 @@ import { UserModel } from '@/src/model/User';
 import { encrypt } from '@/src/lib/encryption'; // Optional if you're encrypting titles
 import { NewAuth } from '@/src/app/api/auth/[...nextauth]/options';
 
-export async function PATCH(req: Request, { params }: { params: { userId: string; chatId: string } }) {
+export async function PATCH(req: Request,context: { params: Promise<{ userId: string; chatId: string; }> }) {
   try {
     await dbConnect();
 
     const session = await NewAuth();
-    const { userId, chatId } = await params;
+    const { userId, chatId } = await context.params;
     const { title } = await req.json();
 
     if (!session || !session.user?.id || session.user.id !== userId) {
