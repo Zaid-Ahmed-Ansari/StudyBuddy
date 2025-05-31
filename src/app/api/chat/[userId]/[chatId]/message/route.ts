@@ -4,8 +4,8 @@ import { NewAuth } from '@/src/app/api/auth/[...nextauth]/options';
 import { UserModel } from '@/src/model/User';
 import { encrypt } from '@/src/lib/encryption';
 
-export async function POST(req: Request, context: { params: { chatId: string; userId: string } }) {
-  const { chatId, userId } = context.params;
+export async function POST(req: Request, { params }: { params: { userId: string; chatId: string } }) {
+  const { chatId, userId } = await params;
 
   try {
     await dbConnect();
