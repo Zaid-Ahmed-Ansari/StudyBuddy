@@ -111,49 +111,49 @@ export const MobileSidebar = ({
   ...props
 }: MobileSidebarProps) => {
   const { open, setOpen } = useSidebar();
+
   return (
     <>
+      {/* Floating Menu Button */}
       <div
         className={cn(
-          "h-10 px-4 py-4 flex flex-row md:hidden items-center justify-between border shadow-xl dark:bg-neutral-800 w-full"
+          "fixed top-4 left-4 z-50 md:hidden p-2 rounded-md shadow-xl border dark:bg-neutral-800 shadow-lg"
         )}
         {...props}
       >
-        <div className="flex justify-end z-20 w-full">
-          <Menu
-            className="text-accent dark:text-neutral-200 cursor-pointer"
-            onClick={() => setOpen(!open)}
-          />
-        </div>
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ x: "-100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "-100%", opacity: 0 }}
-              transition={{
-                duration: 0.3,
-                ease: "easeInOut",
-              }}
-              className={cn(
-                "fixed h-full w-full inset-0 bg-white dark:bg-neutral-900 p-10 z-[100] flex flex-col justify-between",
-                className
-              )}
-            >
-              <div
-                className="absolute right-10 top-10 z-50 text-neutral-800 dark:text-neutral-200 cursor-pointer"
-                onClick={() => setOpen(!open)}
-              >
-                <X />
-              </div>
-              {children}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <Menu
+          className="text-accent  dark:text-neutral-200 cursor-pointer"
+          onClick={() => setOpen(!open)}
+        />
       </div>
+
+      {/* Sidebar Panel */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ x: "-100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "-100%", opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className={cn(
+              "fixed top-0 left-0 h-full w-[80%] bg-white dark:bg-neutral-900 p-6 z-[100] shadow-xl",
+              className
+            )}
+          >
+            <div
+              className="absolute right-4 top-4 text-neutral-800 dark:text-neutral-200 cursor-pointer"
+              onClick={() => setOpen(false)}
+            >
+              <X />
+            </div>
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
+
 
 export const SidebarLink = ({
   link,
