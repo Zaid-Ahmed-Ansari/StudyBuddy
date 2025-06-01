@@ -285,16 +285,16 @@ export default function VisualGenerator() {
                   <span className='text-accent'>Visuals Generator</span>
                 </div>
               </header>
-    <div className="flex w-full min-h-screen px-6 py-10 gap-6">
+    <div className="flex md:flex-row flex-col w-full min-h-screen px-6 py-10 gap-6">
       
       {/* Sidebar */}
-      <div className="w-52 rounded-2xl border border-accent/20 shadow-2xl p-4">
+      <div className="md:w-52 w-full flex flex-col rounded-2xl border border-accent/20 shadow-2xl p-4">
         <h3 className="text-lg font-semibold mb-4">Select Type</h3>
-        <ul className="space-y-2">
+        <div className="space-y-2 flex md:flex-col ">
           {options.map((opt) => (
-            <li key={opt.key}>
+            <div key={opt.key} className="flex md:flex-col flex-row">
               <button
-                className={`w-full flex items-center px-3 py-2 rounded-lg border hover:bg-accent/10 ${
+                className={`w-full flex  items-center px-3 py-2 rounded-lg border hover:bg-accent/10 ${
                   mode === opt.key
                     ? "border-accent text-accent font-bold"
                     : "border-muted text-muted-foreground"
@@ -304,9 +304,9 @@ export default function VisualGenerator() {
                 {opt.icon}
                 {opt.label}
               </button>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
           
       {/* Main */}

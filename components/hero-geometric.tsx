@@ -136,7 +136,7 @@ export default function HeroGeometric({
           height={80}
           rotate={-8}
           gradient="from-violet-500/[0.15]"
-          className="left-[5%] md:left-[10%] bottom-[5%] md:bottom-[10%]"
+          className="left-[5%] md:left-[10%] bottom-[5%] md:bottom-[10%] invisible md:visible"
         />
 
         <ElegantShape
@@ -145,7 +145,7 @@ export default function HeroGeometric({
           height={60}
           rotate={20}
           gradient="from-amber-500/[0.15]"
-          className="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
+          className="right-[15%] md:right-[20%] top-[10%] md:top-[15%] invisible md:visible"
         />
 
         <ElegantShape
@@ -154,7 +154,7 @@ export default function HeroGeometric({
           height={40}
           rotate={-25}
           gradient="from-cyan-500/[0.15]"
-          className="left-[20%] md:left-[25%] top-[5%] md:top-[10%]"
+          className="left-[20%] md:left-[25%] top-[5%] md:top-[10%] invisible md:visible"
         />
       </div>
 

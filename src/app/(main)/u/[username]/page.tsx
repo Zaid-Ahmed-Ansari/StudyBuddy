@@ -33,14 +33,14 @@ export default function ProfilePage() {
       <h1 className="text-2xl font-bold text-center text-accent mb-[40px]">
         Profile Settings
       </h1>
-      <div className="flex">
+      <div className="flex md:flex-row flex-col items-center justify-between md:justify-center gap-10">
 
      
-      <div className="w-full mr-[100px]">
+      <div className=" ">
 
       <Card_10/>
       </div>
-      <div className="w-full">
+      <div className="">
 
       
         <h1 className="text-bold text-3xl text-accent mb-5">Change your credentials here:</h1>

@@ -32,12 +32,12 @@ export default function Footer() {
 
               
 
-              {/* <Link
-              href=""
+              <Link
+              href={`/ai-chat/${user?.id}`}
               className="hover:text-accent transition-colors duration-200"
               >
                 AI Chatbot
-              </Link> */}
+              </Link>
               <Link
               href="/notes-generator"
               className="hover:text-accent transition-colors duration-200"

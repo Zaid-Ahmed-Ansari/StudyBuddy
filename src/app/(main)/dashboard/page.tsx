@@ -62,7 +62,7 @@ export default function DashboardPage() {
           background={<div className="bg-green-100 h-full" />}
           Icon={Bot}// Replace with an icon component if needed
           description="Talk with your own Study Assistant."
-          href="/ai-chat"
+          href={`/ai-chat/${user?.id}`}
           cta="Visit your Buddy"
         />
         

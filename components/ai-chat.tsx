@@ -153,7 +153,7 @@ export default function AiChat({chatId,userId}: {chatId: string,userId: string})
   }
 
   return (
-    <div className="min-h-screen text-white flex flex-col mr-76 ">
+    <div className="min-h-screen text-white flex flex-col md:mr-76 ">
       <header className="p-4 text-center font-sans text-2xl font-bold font-mono border rounded-full mt-5  shadow-xl">
         <div className="flex items-center justify-center gap-2">
           <Bot size={24} className="text-accent" />
