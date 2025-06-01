@@ -6,7 +6,7 @@ import { IUser } from "@/src/model/User";
 // components/Footer.jsx
 export default function Footer() {
   const {data:session} = useSession()
-  const user = session?.user as IUser
+  const user = session?.user 
     return (
       <footer className=" text-foreground py-10 px-6 md:px-16">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
