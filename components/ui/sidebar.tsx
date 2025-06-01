@@ -3,8 +3,9 @@
 import { cn } from "@/lib/utils";
 import Link, { LinkProps } from "next/link";
 import React, { useState, createContext, useContext } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, MotionProps } from "framer-motion";
 import { LucideIcon, Menu, X } from "lucide-react";
+type MobileSidebarProps = React.HTMLAttributes<HTMLDivElement> & MotionProps;
 
 interface Links {
   label: string;
@@ -75,7 +76,7 @@ export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
   return (
     <>
       <DesktopSidebar {...props} />
-      <MobileSidebar {...(props as React.ComponentProps<"div">)} />
+      <MobileSidebar {...(props as MobileSidebarProps)} />
     </>
   );
 };
@@ -108,7 +109,7 @@ export const MobileSidebar = ({
   className,
   children,
   ...props
-}: React.ComponentProps<"div">) => {
+}: MobileSidebarProps) => {
   const { open, setOpen } = useSidebar();
   return (
     <>
