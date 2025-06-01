@@ -1,7 +1,7 @@
 // components/ChatSidebar.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -13,6 +13,7 @@ import {
   Menu,
   ChevronLeft,
   Search,
+  MoreVertical,
 } from "lucide-react";
 import axios from "axios";
 import { useRouter, usePathname } from "next/navigation";
@@ -30,6 +31,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { useSession } from "next-auth/react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Chat {
   _id: string;
@@ -56,12 +58,51 @@ export default function ChatSidebar({
   const [isCreating, setIsCreating] = useState(false);
   const [chatToDelete, setChatToDelete] = useState<Chat | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const { data: session } = useSession();
   const user = session?.user;
 
   const router = useRouter();
   const pathname = usePathname();
+
+  // Close dropdown when clicking outside or on mobile scroll
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      setTouchStartY(event.touches[0].clientY);
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (touchStartY !== null) {
+        const currentY = event.touches[0].clientY;
+        const diff = Math.abs(currentY - touchStartY);
+        // If user scrolls more than 10px, close dropdown
+        if (diff > 10) {
+          setActiveDropdown(null);
+          setTouchStartY(null);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [touchStartY]);
 
   // Load chats on component mount
   useEffect(() => {
@@ -158,6 +199,7 @@ export default function ChatSidebar({
       console.error("Failed to delete chat:", error);
     } finally {
       setChatToDelete(null);
+      setActiveDropdown(null);
     }
   };
 
@@ -165,6 +207,7 @@ export default function ChatSidebar({
     e.stopPropagation();
     setEditingId(chat._id);
     setEditTitle(chat.title);
+    setActiveDropdown(null);
   };
 
   const saveTitle = async (chatId: string) => {
@@ -212,6 +255,12 @@ export default function ChatSidebar({
     }
   };
 
+  const toggleDropdown = (chatId: string, e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault(); // Prevent any default touch behaviors
+    setActiveDropdown(activeDropdown === chatId ? null : chatId);
+  };
+
   // Filter chats based on search term
   const filteredChats = chats.filter((chat) =>
     chat.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -233,6 +282,25 @@ export default function ChatSidebar({
   return (
     <>
       {/* Mobile overlay */}
+      {isMobile && !isCollapsed && (
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="fixed top-4 left-4 z-50 p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          <X size={20} className="text-white" />
+        </button>
+      )}
+      
+      {isMobile && isCollapsed && (
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="fixed top-4 right-4 z-50 p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          <Menu size={20} className="text-white" />
+        </button>
+      )}
+
+      {/* Overlay for collapsed sidebar */}
       <AnimatePresence>
         {!isCollapsed && (
           <motion.div
@@ -248,22 +316,28 @@ export default function ChatSidebar({
       {/* Sidebar */}
       <motion.div
         initial={false}
-        animate={{ width: isCollapsed ? 0 : 320 }}
-        className={`fixed right-0 top-0 h-full border-r border-gray-700 z-50 overflow-hidden ${
+        animate={{ 
+          width: isCollapsed ? 0 : isMobile ? '100vw' : 320,
+          x: isCollapsed && isMobile ? '100%' : 0 
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className={`fixed right-0 top-0 h-full border-r border-gray-700 z-50 overflow-hidden md:bg-transparent bg-gray-900 ${
           isCollapsed ? "lg:w-0" : "lg:w-80"
-        }`}
+        } ${isMobile ? 'w-full' : ''}`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-4 border-b border-gray-700">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white">Chats</h2>
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="lg:hidden p-2 hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                <ChevronLeft size={20} className="text-gray-400" />
-              </button>
+              {isMobile && (
+                <button
+                  onClick={() => setIsCollapsed(true)}
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <X size={20} className="text-gray-400" />
+                </button>
+              )}
             </div>
 
             {/* New Chat Button */}
@@ -351,11 +425,11 @@ export default function ChatSidebar({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className={`group mb-2 p-3 rounded-lg cursor-pointer transition-all hover:bg-gray-800 ${
+                        className={`group mb-2 p-3 rounded-lg cursor-pointer transition-all hover:bg-gray-800 relative ${
                           currentChatId === chat._id
                             ? "bg-gray-800 border border-indigo-500"
                             : ""
-                        }`}
+                        } ${isMobile ? 'active:bg-gray-700' : ''}`}
                         onClick={() => handleChatSelect(chat._id)}
                       >
                         <div className="flex items-start gap-3">
@@ -400,7 +474,7 @@ export default function ChatSidebar({
                               </div>
                             ) : (
                               <>
-                                <h3 className="text-white text-sm font-medium truncate">
+                                <h3 className="text-white text-sm font-medium truncate pr-8">
                                   {chat.title}
                                 </h3>
                                 <p className="text-gray-400 text-xs mt-1">
@@ -411,57 +485,135 @@ export default function ChatSidebar({
                           </div>
 
                           {editingId !== chat._id && (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={(e) => startEditing(chat, e)}
-                                className="p-1.5 hover:bg-gray-700 rounded-md transition-colors"
-                                title="Rename chat"
-                              >
-                                <Edit3 size={14} className="text-gray-400" />
-                              </button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setChatToDelete(chat);
-                                    }}
-                                    className="p-1.5 hover:bg-gray-700 rounded-md transition-colors"
-                                    title="Delete chat"
-                                  >
-                                    <Trash2
-                                      size={14}
-                                      className="text-red-400"
-                                    />
-                                  </button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Delete this chat?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This action cannot be undone. The chat{" "}
-                                      <strong>{chatToDelete?.title}</strong>{" "}
-                                      will be permanently removed.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel
-                                      onClick={() => setChatToDelete(null)}
+                            <>
+                              {/* Desktop actions - hidden on mobile */}
+                              <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={(e) => startEditing(chat, e)}
+                                  className="p-1.5 hover:bg-gray-700 rounded-md transition-colors"
+                                  title="Rename chat"
+                                >
+                                  <Edit3 size={14} className="text-gray-400" />
+                                </button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setChatToDelete(chat);
+                                      }}
+                                      className="p-1.5 hover:bg-gray-700 rounded-md transition-colors"
+                                      title="Delete chat"
                                     >
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={(e) => deleteChat(chat._id, e)}
-                                      className="bg-red-600 hover:bg-red-700"
+                                      <Trash2
+                                        size={14}
+                                        className="text-red-400"
+                                      />
+                                    </button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Delete this chat?
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone. The chat{" "}
+                                        <strong>{chatToDelete?.title}</strong>{" "}
+                                        will be permanently removed.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel
+                                        onClick={() => setChatToDelete(null)}
+                                      >
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={(e) => deleteChat(chat._id, e)}
+                                        className="bg-red-600 hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+
+                              {/* Mobile 3-dots menu */}
+                              <div className="md:hidden relative" ref={dropdownRef}>
+                                <button
+                                  onClick={(e) => toggleDropdown(chat._id, e)}
+                                  onTouchStart={(e) => e.stopPropagation()}
+                                  className="p-2 hover:bg-gray-700 active:bg-gray-600 rounded-md transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                  title="More options"
+                                  aria-label="More options"
+                                >
+                                  <MoreVertical size={16} className="text-gray-400" />
+                                </button>
+
+                                <AnimatePresence>
+                                  {activeDropdown === chat._id && (
+                                    <motion.div
+                                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                      transition={{ duration: 0.15 }}
+                                      className="absolute right-0 top-full mt-2 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl z-20 min-w-[140px] overflow-hidden"
                                     >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
+                                      <div className="py-1">
+                                        <button
+                                          onClick={(e) => startEditing(chat, e)}
+                                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700 active:bg-gray-600 transition-colors"
+                                        >
+                                          <Edit3 size={16} />
+                                          Rename
+                                        </button>
+                                        <div className="border-t border-gray-600" />
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setChatToDelete(chat);
+                                              }}
+                                              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-gray-700 active:bg-gray-600 transition-colors"
+                                            >
+                                              <Trash2 size={16} />
+                                              Delete
+                                            </button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>
+                                                Delete this chat?
+                                              </AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                This action cannot be undone. The chat{" "}
+                                                <strong>{chatToDelete?.title}</strong>{" "}
+                                                will be permanently removed.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel
+                                                onClick={() => setChatToDelete(null)}
+                                              >
+                                                Cancel
+                                              </AlertDialogCancel>
+                                              <AlertDialogAction
+                                                onClick={(e) => deleteChat(chat._id, e)}
+                                                className="bg-red-600 hover:bg-red-700"
+                                              >
+                                                Delete
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            </>
                           )}
                         </div>
                       </motion.div>
@@ -472,16 +624,6 @@ export default function ChatSidebar({
           </div>
         </div>
       </motion.div>
-
-      {/* Toggle button for mobile */}
-      {isCollapsed && (
-        <button
-          onClick={() => setIsCollapsed(false)}
-          className="fixed top-4 left-4 z-50 p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors lg:hidden"
-        >
-          <Menu size={20} className="text-white" />
-        </button>
-      )}
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {

@@ -290,11 +290,11 @@ export default function VisualGenerator() {
       {/* Sidebar */}
       <div className="md:w-52 w-full flex flex-col rounded-2xl border border-accent/20 shadow-2xl p-4">
         <h3 className="text-lg font-semibold mb-4">Select Type</h3>
-        <div className="space-y-2 flex md:flex-col ">
+        <div className="space-y-2 flex flex-col ">
           {options.map((opt) => (
             <div key={opt.key} className="flex md:flex-col flex-row">
               <button
-                className={`w-full flex  items-center px-3 py-2 rounded-lg border hover:bg-accent/10 ${
+                className={`flex-1 flex  items-center px-3 py-2 rounded-lg border hover:bg-accent/10 ${
                   mode === opt.key
                     ? "border-accent text-accent font-bold"
                     : "border-muted text-muted-foreground"
