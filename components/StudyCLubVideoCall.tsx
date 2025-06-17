@@ -28,8 +28,6 @@ const StudyCLubVideoCall = ({
   const {
     call,
     client,
-    
-    
     setCall,
     setClient,
   } = useCallStore();
@@ -37,11 +35,76 @@ const StudyCLubVideoCall = ({
   // Initialize only once per mount (handles refresh rejoin)
   useInitStreamCall({ apiKey, token, user, callId });
 
+  const disableDevices = async () => {
+    if (!call) return;
+    
+    try {
+      // Force disable microphone
+      if (call.microphone.state.status === 'enabled') {
+        await call.microphone.disable();
+      }
+      // Force disable camera
+      if (call.camera.state.status === 'enabled') {
+        await call.camera.disable();
+      }
+    } catch (err) {
+      console.error('Error disabling devices:', err);
+    }
+  };
+
+  const handleLeave = async () => {
+    try {
+      if (call) {
+        // First disable devices
+        await disableDevices();
+        
+        // Then leave the call
+        await call.leave();
+        
+        // Disconnect the client
+        if (client) {
+          await client.disconnectUser();
+        }
+        
+        // Reset all states
+        setIsSetupComplete(false);
+        setHasJoined(false);
+        setMicOff(false);
+        setCamOff(false);
+        setCall(null);
+        setClient(null);
+      }
+    } catch (err) {
+      console.error('Error leaving call', err);
+    } finally {
+      onClose();
+    }
+  };
+
+  // Add cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (call) {
+        disableDevices().then(() => {
+          call.leave().then(() => {
+            if (client) {
+              client.disconnectUser();
+            }
+          }).catch(err => console.error('Error leaving call on unmount:', err));
+        }).catch(err => console.error('Error in cleanup:', err));
+      }
+    };
+  }, [call, client]);
+
   useEffect(() => {
     const joinCall = async () => {
       if (isSetupComplete && call && !hasJoined) {
         try {
-          await call.join();
+          // Only join if not already joined
+          if (!call.state.localParticipant) {
+            await call.join();
+          }
+          
           // Only enable devices if we have permission
           if (micOff) {
             await call.microphone.disable();
@@ -71,48 +134,6 @@ const StudyCLubVideoCall = ({
     };
     joinCall();
   }, [isSetupComplete, call, hasJoined, micOff, camOff]);
-
-  const handleLeave = async () => {
-    try {
-      if (call) {
-        // First disable devices
-        try {
-          await call.microphone.disable();
-        } catch (err) {
-          console.error('Error disabling microphone:', err);
-        }
-        try {
-          await call.camera.disable();
-        } catch (err) {
-          console.error('Error disabling camera:', err);
-        }
-        // Then leave the call
-        await call.leave();
-      }
-    } catch (err) {
-      console.error('Error leaving call', err);
-    } finally {
-      setIsSetupComplete(false);
-      setHasJoined(false);
-      setMicOff(false);
-      setCamOff(false);
-      
-      onClose();
-    }
-  };
-
-  // Add cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (call) {
-        // First disable devices
-        call.microphone.disable().catch(err => console.error('Error disabling microphone on unmount:', err));
-        call.camera.disable().catch(err => console.error('Error disabling camera on unmount:', err));
-        // Then leave the call
-        call.leave().catch(err => console.error('Error leaving call on unmount:', err));
-      }
-    };
-  }, [call]);
 
   if (!call || !client) return <Loader />;
 

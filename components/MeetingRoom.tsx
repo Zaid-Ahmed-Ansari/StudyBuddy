@@ -37,6 +37,21 @@ const MeetingRoom = ({ onLeave }: { onLeave: () => void }) => {
   const handleLeaveCall = async () => {
     try {
       if (call) {
+        // Force disable devices first
+        try {
+          // Disable microphone
+          if (call.microphone.state.status === 'enabled') {
+            await call.microphone.disable();
+          }
+          // Disable camera
+          if (call.camera.state.status === 'enabled') {
+            await call.camera.disable();
+          }
+        } catch (error) {
+          console.error('Error disabling devices:', error);
+        }
+        
+        // Then leave the call
         await call.leave();
       }
     } catch (error) {

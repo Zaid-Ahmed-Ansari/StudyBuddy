@@ -206,7 +206,7 @@ export default function StudyPlanner() {
           {/* Content */}
           <div className="p-6">
             <div className="mb-8">
-              <label className="text-sm font-medium mb-4 block">Select Plan Type(Visuals will look better on desktop)</label>
+              <label className="text-sm font-medium mb-4 block">Select Plan Type (Visuals will look better on desktop)</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                   type="button"
@@ -390,7 +390,7 @@ export default function StudyPlanner() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Additional Details(Regenerate if proper markdown is not shown)</label>
+                <label className="text-sm font-medium">Additional Details (Regenerate if proper markdown is not shown)</label>
                 <textarea
                   value={studyPlan.additionalDetails}
                   onChange={(e) => setStudyPlan({ ...studyPlan, additionalDetails: e.target.value })}

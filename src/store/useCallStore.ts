@@ -21,7 +21,32 @@ export const useCallStore = create<CallStore>()(
       setClient: (client) => set({ client }),
       setCall: (call) => set({ call }),
       setMinimized: (isMinimized) => set({ isMinimized }),
-      reset: () => set({ client: null, call: null, isMinimized: false }),
+      reset: async () => {
+        const state = useCallStore.getState();
+        if (state.call) {
+          try {
+            // First disable devices
+            if (state.call.microphone.state.status === 'enabled') {
+              await state.call.microphone.disable();
+            }
+            if (state.call.camera.state.status === 'enabled') {
+              await state.call.camera.disable();
+            }
+            // Then leave the call
+            await state.call.leave();
+          } catch (error) {
+            console.error('Error cleaning up call:', error);
+          }
+        }
+        if (state.client) {
+          try {
+            await state.client.disconnectUser();
+          } catch (error) {
+            console.error('Error disconnecting client:', error);
+          }
+        }
+        set({ client: null, call: null, isMinimized: false });
+      },
     }),
     {
       name: 'video-call-store', // localStorage key

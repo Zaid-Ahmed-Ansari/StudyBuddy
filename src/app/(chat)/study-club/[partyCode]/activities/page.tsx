@@ -149,14 +149,30 @@ export default function StudyClubActivitiesPage() {
       if (client) {
         const call = client.call("default", String(partyCode));
         if (call) {
+          // First disable devices
+          try {
+            if (call.microphone.state.status === 'enabled') {
+              await call.microphone.disable();
+            }
+            if (call.camera.state.status === 'enabled') {
+              await call.camera.disable();
+            }
+          } catch (error) {
+            console.error('Error disabling devices:', error);
+          }
+
+          // Then leave the call
           await call.leave();
+          
+          // Finally disconnect the client
+          await client.disconnectUser();
         }
       }
     } catch (error) {
       console.error('Error ending call:', error);
     } finally {
       setIsVideoOpen(false);
-      
+      setHadActiveCall(true);
     }
   };
 
@@ -177,11 +193,7 @@ export default function StudyClubActivitiesPage() {
         await call.create();
       }
 
-      // Join the call
-      await call.join();
-      
       // Set up call state
-      
       setIsVideoOpen(true);
     } catch (error) {
       console.error('Error creating/joining call:', error);
@@ -195,7 +207,17 @@ export default function StudyClubActivitiesPage() {
       if (client) {
         const call = client.call("default", String(partyCode));
         if (call) {
-          call.leave().catch(err => console.error('Error leaving call on unmount:', err));
+          // First disable devices
+          Promise.all([
+            call.microphone.state.status === 'enabled' ? call.microphone.disable() : Promise.resolve(),
+            call.camera.state.status === 'enabled' ? call.camera.disable() : Promise.resolve()
+          ]).then(() => {
+            // Then leave the call
+            call.leave().then(() => {
+              // Finally disconnect the client
+              client.disconnectUser();
+            }).catch(err => console.error('Error leaving call on unmount:', err));
+          }).catch(err => console.error('Error disabling devices on unmount:', err));
         }
       }
     };
@@ -264,27 +286,27 @@ export default function StudyClubActivitiesPage() {
           <ul className="text-gray-300 space-y-2 text-sm">
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
-              Always end the call properly using the "End Call" button before closing the tab
+              Always end the call properly using the "End Call" button before closing the tab.
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
-              Ensure your microphone and camera permissions are granted before joining a call
+              Ensure your microphone and camera permissions are granted before joining a call.
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
-              If you experience any issues, try refreshing the page and rejoining the call
+              If you experience any issues, try refreshing the page and rejoining the call.
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
-              Keep your browser tab open while in a call to maintain connection
+              Keep your browser tab open while in a call to maintain connection.
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
-              Use the chat feature for text communication if audio/video isn't working
+              Use the chat feature for text communication if audio/video isn't working.
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
-              Use other services in your Dashboard tab
+              Use other services in your Dashboard tab.
             </li>
           </ul>
         </div>
