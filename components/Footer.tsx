@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { IUser } from "@/src/model/User";
+import { Github, Linkedin } from "lucide-react";
 
 // components/Footer.jsx
 export default function Footer() {
@@ -31,7 +32,12 @@ export default function Footer() {
               </Link>
 
               
-
+              <Link
+              href="/study-planner"
+              className="hover:text-accent transition-colors duration-200"
+              >
+                Studdy Planner
+              </Link>
               <Link
               href={`/ai-chat/${user?.id}`}
               className="hover:text-accent transition-colors duration-200"
@@ -70,22 +76,39 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-2">Connect</h3>
             <div className="flex space-x-4 mt-2">
-              ahmedzaid2627@gmail.com
-              {/* <a href="#" aria-label="Twitter" className="text-muted-foreground hover:text-sky-500 transition">
-                <i className="fab fa-twitter text-xl"></i>
+              <a href="https://github.com/zaid-ahmed-ansari" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-accent transition-colors">
+                <Github className="w-5 h-5" />
               </a>
-              <a href="#" aria-label="LinkedIn" className="text-muted-foreground hover:text-blue-600 transition">
-                <i className="fab fa-linkedin text-xl"></i>
+              <a href="https://www.linkedin.com/in/zaid-ahmed-ansari-aa9272293/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-accent transition-colors">
+                <Linkedin className="w-5 h-5" />
               </a>
-              <a href="#" aria-label="GitHub" className="text-muted-foreground hover:text-gray-900 dark:hover:text-white transition">
-                <i className="fab fa-github text-xl"></i>
-              </a> */}
+              
             </div>
+            
           </div>
+          
         </div>
+         <div className="mt-8 pt-8 border-t border-gray-800">
+          <div className="text-center text-sm text-gray-400">
+            <p className="mb-2">Developed and maintained by Zaid Ahmed Ansari</p>
+            <p className="mb-2">
+              
+                ahmedzaid2627@gmail.com
+              
+            </p>
+            <p className="text-xs opacity-75">Special thanks to our beta tester: Tausif Ahmad Ansari</p>
+            <p className="mb-2">
+              
+                tausif.ahmad880@gmail.com
+              
+            </p>
+          </div>
   
         <div className="mt-10 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} StudyBuddy. All rights reserved.
+        </div>
+
+       
         </div>
       </footer>
     );

@@ -49,7 +49,7 @@ export default function RootLayout({
           {children}
         </main> */}
         <div className="w-screen flex ">
-          <div className="h-screen sticky top-3 flex z-50">
+          <div className="h-screen sticky top-3 left-3 flex z-50">
             <SidebarDemo/>
           </div>
           <div className="w-screen max-w-screen">
@@ -57,8 +57,8 @@ export default function RootLayout({
           {children}
           </div>
         </div>
-        
        <Footer/>
+        
         
           </div>
           

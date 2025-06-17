@@ -12,7 +12,8 @@ export async function middleware(request: NextRequest) {
     "/schedule-generator",
     "/notes-summarizer",
     "/visuals-generator",
-    "/study-club"
+    "/study-club",
+    "/study-planner"
   ];
 
   if (!session && protectedRoutes.some(route => pathname.startsWith(route))) {
@@ -43,6 +44,7 @@ export const config = {
     "/",
     "/notes-summarizer",
     "/visuals-generator",
-    "/study-club/:path*"
+    "/study-club/:path*",
+    "/study-planner"
   ],
 };

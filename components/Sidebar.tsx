@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { LayoutDashboard, UserCog, Settings, LogOut, Library, LibraryBig, CalendarCheck, NotebookPenIcon, Bot, UserCircle2, NotebookText, House, ChartColumn } from "lucide-react";
+import { LayoutDashboard, UserCog, Settings, LogOut, Library, LibraryBig, CalendarCheck, NotebookPenIcon, Bot, UserCircle2, NotebookText, House, ChartColumn, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -19,6 +19,14 @@ export function SidebarDemo() {
         <LayoutDashboard className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
+    {
+      label: "Study Planner",
+      href: "/study-planner",
+      icon: (
+        <CalendarDays className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    
     {
       label: "AI Chatbot",
       href: `/ai-chat/${user?.id}`,

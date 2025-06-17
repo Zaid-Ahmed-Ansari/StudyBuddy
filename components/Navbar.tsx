@@ -25,6 +25,12 @@ const Navbar =() => {
   const { data: session } = useSession();
   const user = session?.user 
   const components: { title: string; href: string; description: string }[] = [
+    {
+      title: "Study Planner",
+      href: `/study-planner`,
+      description:
+        "An AI-powered study planner that will help you organize your time and study.",
+    },
   {
     title: "AI Chatbot",
     href: `/ai-chat/${user?.id}`,

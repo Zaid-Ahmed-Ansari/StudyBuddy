@@ -36,6 +36,8 @@ ChartJS.register(
   ArcElement
 );
 
+
+
 const options = [
   {
     key: "flowchart",
@@ -278,7 +280,7 @@ export default function VisualGenerator() {
   };
 
   return (
-    <div>
+    <div className="pt-12 md:pt-0">
        <header className="p-4 text-center border mt-5 mr-5 ml-5 rounded-full text-2xl font-bold  shadow-xl">
                 <div className="flex items-center justify-center mb-2 gap-2">
                   <ChartColumn size={24} className="text-accent" />

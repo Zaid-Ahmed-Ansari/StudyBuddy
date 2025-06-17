@@ -2,16 +2,19 @@
 import { NextResponse } from 'next/server'
 import { UserModel } from '@/src/model/User'
 import { NewAuth } from '@/src/app/api/auth/[...nextauth]/options';
+import dbConnect from '@/src/lib/dbConnect';
 
 export async function POST(request: Request) {
+  await dbConnect();
+  
   function generateRandomId(length = 12) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let _id = '';
-  for (let i = 0; i < length; i++) {
-    _id += chars.charAt(Math.floor(Math.random() * chars.length));
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let _id = '';
+    for (let i = 0; i < length; i++) {
+      _id += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return _id;
   }
-  return _id;
-}
   const session = await NewAuth();
   
   if (!session) {

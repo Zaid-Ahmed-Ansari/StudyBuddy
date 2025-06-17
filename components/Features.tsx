@@ -14,6 +14,15 @@ const Features = () => {
    items={
     [
       {
+        title: "Study Planner",
+        description: "Plan, organize, and track your study goals with a smart, structured, and visually-rich planner.",
+        icon: <Bot />,
+        meta: "24/7 availability",
+        tags: ["AI", "Chat"],
+        status: "Active",
+        colSpan: 1
+      },
+      {
         title: "AI Chatbot",
         description: "Get instant answers to your questions and personalized study tips",
         icon: <Bot />,
@@ -58,8 +67,8 @@ const Features = () => {
         icon: <Home />,
         meta: "24/7 availability",
         tags: ["AI", "Study", "Calls"],
-        status: "Coming Soon",
-        colSpan: 2
+        status: "Active",
+        colSpan: 1
       },
       
     ]
