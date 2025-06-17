@@ -3,7 +3,6 @@ import dbConnect from '@/src/lib/dbConnect';
 import { UserModel } from '@/src/model/User';
 import { StudyClubModel } from '@/src/model/StudyClub';
 import { NewAuth } from '../../auth/[...nextauth]/options';
-import { sendNewJoinRequest, sendMemberUpdate } from '@/src/lib/notifications';
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,7 +37,6 @@ export async function POST(req: NextRequest) {
       if (!club.members.some((memberId) => memberId.equals(user._id))) {
         club.members.push(user._id);
         await club.save();
-        await sendMemberUpdate(trimmedCode);
       }
       return NextResponse.json({ success: true, isAdmin: true });
     }
@@ -53,10 +51,6 @@ export async function POST(req: NextRequest) {
 
     club.pendingRequests.push(user._id);
     await club.save();
-
-    // Send notifications
-    await sendNewJoinRequest(trimmedCode, user.username, user.email);
-    await sendMemberUpdate(trimmedCode);
 
     return NextResponse.json({ success: true });
   } catch (error) {

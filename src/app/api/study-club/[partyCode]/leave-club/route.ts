@@ -3,7 +3,6 @@ import dbConnect from '@/src/lib/dbConnect';
 import { StudyClubModel } from '@/src/model/StudyClub';
 import { UserModel } from '@/src/model/User';
 import { NewAuth } from '../../../auth/[...nextauth]/options';
-import { sendMemberUpdate } from '@/src/lib/notifications';
 
 export async function DELETE(
   req: NextRequest,
@@ -15,8 +14,9 @@ export async function DELETE(
     const { partyCode } = await params;
     
     const session = await NewAuth();
+
     if (!session || !session.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await UserModel.findOne({ email: session.user.email });
@@ -26,7 +26,7 @@ export async function DELETE(
 
     const club = await StudyClubModel.findOne({ partyCode });
     if (!club) {
-      return NextResponse.json({ error: 'Club not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Club not found' }, { status: 404 });
     }
 
     // Check if user is admin
@@ -44,15 +44,11 @@ export async function DELETE(
     club.members.splice(memberIndex, 1);
     await club.save();
 
-    // Send notification
-    await sendMemberUpdate(partyCode);
+    
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Successfully left the club' 
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error leaving club:', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to leave club' }, { status: 500 });
   }
 }

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/src/lib/dbConnect';
 import { StudyClubModel } from '@/src/model/StudyClub';
 import { NewAuth } from '../../../auth/[...nextauth]/options';
-import { sendMemberUpdate } from '@/src/lib/notifications';
 
 export async function POST(
   req: NextRequest,
@@ -28,29 +27,23 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Club not found' }, { status: 404 });
     }
 
-    if (!club.admin._id.equals(session.user.id)) {
-      return NextResponse.json({ success: false, error: 'Not authorized' }, { status: 403 });
+    // Verify current user is admin
+    if (!club.admin.equals(session.user.id)) {
+      return NextResponse.json({ success: false, error: 'Only admin can transfer ownership' }, { status: 403 });
     }
 
-    // Check if new admin is a member
-    const isMember = club.members.some(memberId => memberId.equals(newAdminId));
-    if (!isMember) {
+    // Verify new admin is a member
+    if (!club.members.some(memberId => memberId.equals(newAdminId))) {
       return NextResponse.json({ success: false, error: 'New admin must be a member' }, { status: 400 });
     }
 
-    // Transfer admin rights
+    // Transfer admin role
     club.admin = newAdminId;
     await club.save();
 
-    // Send notification about admin change
-    await sendMemberUpdate(params.partyCode);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Admin rights transferred successfully' 
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error transferring admin rights:', error);
-    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
+    console.error('Error transferring admin:', error);
+    return NextResponse.json({ success: false, error: 'Failed to transfer admin' }, { status: 500 });
   }
 } 

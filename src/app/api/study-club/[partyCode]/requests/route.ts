@@ -4,7 +4,6 @@ import dbConnect from '@/src/lib/dbConnect';
 import { StudyClubModel } from '@/src/model/StudyClub';
 import { UserModel } from '@/src/model/User';
 import { NewAuth } from '../../../auth/[...nextauth]/options';
-import { sendMemberUpdate, sendRequestStatus } from '@/src/lib/notifications';
 
 export async function POST(
   req: NextRequest, 
@@ -12,10 +11,10 @@ export async function POST(
 ) {
   try {
     await dbConnect();
-    
     const session = await NewAuth();
+
     if (!session || !session.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const { partyCode } = await context.params;
@@ -41,11 +40,9 @@ export async function POST(
       return NextResponse.json({ error: 'Study club not found' }, { status: 404 });
     }
 
-    // Check if current user is admin
-    if (!club.admin.equals(currentUser._id)) {
-      return NextResponse.json({ 
-        error: 'Forbidden: Only club admin can approve or reject requests' 
-      }, { status: 403 });
+    // Verify user is admin
+    if (!club.admin.equals(session.user.id)) {
+      return NextResponse.json({ success: false, error: 'Not authorized' }, { status: 403 });
     }
 
     // Find the pending request
@@ -56,32 +53,19 @@ export async function POST(
       }, { status: 404 });
     }
 
-    // Process the action
     if (action === 'approve') {
-      // Add user to members if not already there
-      const isAlreadyMember = club.members.some(id => id.equals(userId));
-      if (!isAlreadyMember) {
-        club.members.push(userId);
-      }
-
-      // Send notifications
-      await sendMemberUpdate(partyCode);
-      await sendRequestStatus(partyCode, userId, 'approved');
+      // Add user to members
+      club.members.push(userId);
     }
 
-    // Remove from pending requests regardless of approve/reject
+    // Remove request
     club.pendingRequests.splice(requestIndex, 1);
-    
-    // Save the updated club
     await club.save();
-    
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error approving request:', error);
-    return NextResponse.json(
-      { error: 'Failed to approve request' },
-      { status: 500 }
-    );
+    console.error('Error handling request:', error);
+    return NextResponse.json({ success: false, error: 'Failed to process request' }, { status: 500 });
   }
 }
 

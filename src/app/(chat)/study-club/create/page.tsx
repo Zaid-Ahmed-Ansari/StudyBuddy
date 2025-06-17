@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, X, LogIn } from 'lucide-react';
 import { useDebounceCallback } from 'usehooks-ts';
 import axios, { AxiosError } from 'axios';
 import { ApiResponse } from '@/src/types/ApiResponse';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 interface StudyClub {
   partyName: string;
@@ -23,24 +24,31 @@ const CreateClubPage = () => {
   const [loading, setLoading] = useState(false);
   const [existingClub, setExistingClub] = useState<StudyClub | null>(null);
   const [isLoadingClub, setIsLoadingClub] = useState(true);
+  const { data: session, status } = useSession();
 
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchExistingClub = async () => {
-      try {
-        const response = await fetch('/api/study-club/user-club');
-        const data = await response.json();
-        setExistingClub(data.club);
-      } catch (error) {
-        console.error('Error fetching existing club:', error);
-      } finally {
-        setIsLoadingClub(false);
-      }
-    };
+  const fetchExistingClub = useCallback(async () => {
+    if (status === 'loading') return;
+    if (!session) {
+      router.push('/auth/signin');
+      return;
+    }
 
+    try {
+      const response = await fetch('/api/study-club/user-club');
+      const data = await response.json();
+      setExistingClub(data.club);
+    } catch (error) {
+      console.error('Error fetching existing club:', error);
+    } finally {
+      setIsLoadingClub(false);
+    }
+  }, [session, status, router]);
+
+  useEffect(() => {
     fetchExistingClub();
-  }, []);
+  }, [fetchExistingClub]);
 
   const checkPartyName = async (name: string) => {
     if (!name.trim()) return;

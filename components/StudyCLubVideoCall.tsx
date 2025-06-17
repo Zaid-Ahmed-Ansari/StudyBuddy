@@ -12,6 +12,8 @@ import MeetingRoom from './MeetingRoom';
 import { Loader } from './loader';
 import { Button } from './ui/button';
 
+import { toast } from 'react-hot-toast';
+
 const StudyCLubVideoCall = ({
   apiKey,
   token,
@@ -24,6 +26,9 @@ const StudyCLubVideoCall = ({
   const [hasJoined, setHasJoined] = useState(false);
   const [micOff, setMicOff] = useState(false);
   const [camOff, setCamOff] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [participants, setParticipants] = useState([]);
 
   const {
     call,
@@ -102,7 +107,7 @@ const StudyCLubVideoCall = ({
         try {
           // Only join if not already joined
           if (!call.state.localParticipant) {
-            await call.join();
+          await call.join();
           }
           
           // Only enable devices if we have permission
@@ -134,6 +139,8 @@ const StudyCLubVideoCall = ({
     };
     joinCall();
   }, [isSetupComplete, call, hasJoined, micOff, camOff]);
+
+ 
 
   if (!call || !client) return <Loader />;
 

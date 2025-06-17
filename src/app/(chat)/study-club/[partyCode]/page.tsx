@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Check, X, Trash2, Loader2, Users, Clock, RefreshCw, LogOut, UserPlus, MessageCircleIcon } from 'lucide-react';
+import { Check, X, Trash2, Loader2, Users, Clock, RefreshCw, LogOut, UserPlus, MessageCircleIcon, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,8 +14,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { UserAvatar } from '@/components/UserAvatar';
+import { useSession } from 'next-auth/react';
 
 type Member = {
   _id: string;
@@ -27,101 +29,96 @@ type Member = {
 type ClubData = {
   partyCode: string;
   partyName: string;
-  admin: Member;
+  admin: {
+    _id: string;
+    username: string;
+    email: string;
+  };
   members: Member[];
   pendingRequests: Member[];
-  stats?: {
-    membersCount: number;
-    pendingRequestsCount: number;
-  };
   isAdmin: boolean;
-  expiresAt?: string;
+  endTime: string;
 };
 
 export default function ClubDashboard() {
-  const { partyCode } = useParams();
   const router = useRouter();
-
+  const { partyCode } = useParams();
+  const { data: session, status } = useSession();
   const [clubData, setClubData] = useState<ClubData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [isDismissing, setIsDismissing] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [timeLeft, setTimeLeft] = useState<string | null>(null);
   const [showKickDialog, setShowKickDialog] = useState(false);
   const [memberToKick, setMemberToKick] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchClubData = async () => {
-    try {
-      const res = await fetch(`/api/study-club/${partyCode}/member`);
-      const data = await res.json();
-
-      if (res.ok) {
-        setClubData(data);
-      } else {
-        setError(data.error || 'Failed to load data');
-        if (res.status === 401) router.push('/login');
-      }
-    } catch (err) {
-      console.error('Error fetching club data:', err);
-      setError('Network error occurred');
-    } finally {
-      setLoading(false);
+  const fetchClubData = useCallback(async () => {
+    if (!partyCode) return;
+    if (status === 'loading') return;
+    if (!session) {
+      router.push('/auth/signin');
+      return;
     }
-  };
 
-  useEffect(() => {
-    if (partyCode) {
-      fetchClubData();
+    try {
+      setIsLoading(true);
+      setError(null);
 
-      // Set up SSE connection for notifications
-      const notificationEventSource = new EventSource(`/api/study-club/${partyCode}/notifications`);
+      const response = await fetch(`/api/study-club/${partyCode}/member`);
+      const data = await response.json();
 
-      notificationEventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'new-join-request') {
-          toast.info(`New join request from ${data.data.username}!`);
-          fetchClubData();
-        } else if (data.type === 'member-update') {
-          fetchClubData();
-        }
-      };
-
-      notificationEventSource.onerror = (error) => {
-        console.error('Notification SSE Error:', error);
-        notificationEventSource.close();
-      };
-
-      return () => {
-        notificationEventSource.close();
-      };
+      if (response.ok) {
+        setClubData(data);
+      } else if (response.status === 401) {
+        router.push('/auth/signin');
+      } else if (response.status === 404) {
+        router.push('/study-club');
+      } else {
+        setError(data.error || 'Failed to load club data');
+      }
+    } catch (error) {
+      console.error('Error fetching club data:', error);
+      setError('Failed to connect to server');
+    } finally {
+      setIsLoading(false);
     }
   }, [partyCode, router]);
 
+  // Initial fetch only when partyCode changes
   useEffect(() => {
-    if (!clubData?.expiresAt) return;
+    if (status === 'authenticated') {
+      fetchClubData();
+    }
+  }, [partyCode, fetchClubData]);
 
-    const updateTimeLeft = () => {
+  // Timer effect
+  useEffect(() => {
+    if (!clubData?.endTime) return;
+
+    const updateTimer = () => {
       const now = new Date();
-      const expiresAt = new Date(clubData.expiresAt);
-      const diff = expiresAt.getTime() - now.getTime();
+      const end = new Date(clubData.endTime);
+      const diff = end.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeLeft('Club has expired');
+        setTimeLeft('Session ended');
         return;
       }
 
-      const minutes = Math.floor(diff / (1000 * 60));
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      setTimeLeft(`${minutes}m ${seconds}s remaining`);
+
+      setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
     };
 
-    updateTimeLeft();
-    const interval = setInterval(updateTimeLeft, 1000);
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [clubData?.expiresAt]);
+  }, [clubData?.endTime]);
 
   const handleApprove = async (userId: string) => {
     if (!clubData?.isAdmin) return;
@@ -137,14 +134,6 @@ export default function ClubDashboard() {
       const data = await res.json();
       if (res.ok) {
         toast.success('Request approved successfully');
-        await fetch(`/api/study-club/${partyCode}/send-notification`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'request-status',
-            data: { userId, status: 'approved' }
-          })
-        });
         await fetchClubData();
       } else {
         toast.error(data.error || 'Failed to approve request');
@@ -171,14 +160,6 @@ export default function ClubDashboard() {
 
       if (response.ok) {
         toast.success('Request rejected successfully');
-        await fetch(`/api/study-club/${partyCode}/send-notification`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'request-status',
-            data: { userId, status: 'rejected' }
-          })
-        });
         await fetchClubData();
       } else {
         toast.error(data.error || 'Failed to reject request');
@@ -270,24 +251,6 @@ export default function ClubDashboard() {
   const handleTransferAdmin = async (userId: string) => {
     if (!clubData?.isAdmin) return;
 
-    const confirmTransfer = () => {
-      return new Promise<boolean>((resolve) => {
-        toast("Transfer Admin Rights?", {
-          description: "Are you sure you want to transfer admin rights to this member? You will no longer be the admin.",
-          action: (
-            <div className="flex gap-2">
-              <button onClick={() => resolve(true)} className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600">Transfer</button>
-              <button onClick={() => resolve(false)} className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm hover:bg-gray-400">Cancel</button>
-            </div>
-          ),
-          duration: 0,
-        });
-      });
-    };
-
-    const shouldTransfer = await confirmTransfer();
-    if (!shouldTransfer) return;
-
     try {
       const toastId = toast("Transferring admin rights...", {
         description: "Please wait while we process your request.",
@@ -315,7 +278,19 @@ export default function ClubDashboard() {
     }
   };
 
-  if (loading) {
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchClubData();
+      toast.success('Data refreshed successfully');
+    } catch (error) {
+      toast.error('Failed to refresh data');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  if (isLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -326,7 +301,7 @@ export default function ClubDashboard() {
     );
   }
 
-  if (error && !clubData) {
+  if (error) {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md">
@@ -378,14 +353,15 @@ export default function ClubDashboard() {
               )}
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={fetchClubData}
-                className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                disabled={loading}
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="h-8 w-8"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
               {clubData.isAdmin ? (
                 <button
                   onClick={handleLeaveClub}
@@ -424,7 +400,7 @@ export default function ClubDashboard() {
               <Users className="w-6 h-6 text-accent" />
               <h2 className="text-lg font-semibold">Members</h2>
             </div>
-            <p className="text-3xl font-bold mt-2">{clubData.stats?.membersCount}</p>
+            <p className="text-3xl font-bold mt-2">{clubData.members.length}</p>
           </div>
           {clubData.isAdmin && (
             <div className="border rounded-lg shadow-xl p-6">
@@ -432,7 +408,7 @@ export default function ClubDashboard() {
                 <Clock className="w-6 h-6 text-accent" />
                 <h2 className="text-lg font-semibold">Pending Requests</h2>
               </div>
-              <p className="text-3xl font-bold mt-2">{clubData.stats?.pendingRequestsCount}</p>
+              <p className="text-3xl font-bold mt-2">{clubData.pendingRequests.length}</p>
             </div>
           )}
         </div>
@@ -447,6 +423,7 @@ export default function ClubDashboard() {
                   key={user._id}
                   className="flex justify-between items-center p-4 border rounded-lg"
                 >
+                  <UserAvatar username={user.username} size={54}/>
                   <div>
                     <h3 className="font-medium text-accent">{user.username}</h3>
                     <p className="text-sm text-gray-600">{user.email}</p>
@@ -509,13 +486,31 @@ export default function ClubDashboard() {
                 </div>
                 {clubData.isAdmin && member._id !== clubData.admin._id && (
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => handleTransferAdmin(member._id)}
-                      className="flex items-center gap-1 bg-accent text-white px-3 py-1 rounded hover:bg-blue-700 transition"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      Make Admin
-                    </button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="flex items-center gap-1 bg-accent text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+                          <UserPlus className="w-4 h-4" />
+                          Make Admin
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-white/90 backdrop-blur-sm">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className='text-black'>Transfer Admin Rights</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to transfer admin rights to {member.username}? You will no longer be the admin of this club.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleTransferAdmin(member._id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Transfer Admin Rights
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     <button
                       onClick={() => handleKick(member._id)}
                       className="flex items-center gap-1 bg-accent text-white px-3 py-1 rounded hover:bg-red-700 transition"

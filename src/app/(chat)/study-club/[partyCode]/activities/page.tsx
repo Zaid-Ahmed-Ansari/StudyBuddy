@@ -4,31 +4,33 @@ import { useParams, useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useSession } from 'next-auth/react'
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { Loader2, Users, X, MessageCircle, Video, LayoutDashboard, Phone } from 'lucide-react'
+import { Loader2, Users, X, MessageCircle, Video, LayoutDashboard, Phone, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import ChatBox from '@/components/ChatBox'
 import MembersList from '@/components/MembersList'
 import { ChatProvider } from '@/components/ChatProvider'
 import { tokenProvider } from '@/src/actions/stream.actions'
 import StudyCLubVideoCall from '@/components/StudyCLubVideoCall'
+import { StreamChat } from 'stream-chat'
+import { Button } from '@/components/ui/button'
 
 import StreamVideoProvider from '@/src/context/StreamVideoProvider'
 import { useStreamVideoClient } from '@stream-io/video-react-sdk'
 
-
-
 export default function StudyClubActivitiesPage() {
   const router = useRouter()
   const { partyCode } = useParams()
-  const [chatToken, setChatToken] = useState("")
+  const [chatToken, setChatToken] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState<string>('');
   const { data: session, status } = useSession()
-  const userM = session?.user
+  const [user, setUser] = useState<any>(null)
   const [isMembersListOpen, setIsMembersListOpen] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [hadActiveCall, setHadActiveCall] = useState(false);
   const [isAudioOpen, setIsAudioOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
 
   // Add club data state
@@ -36,86 +38,75 @@ export default function StudyClubActivitiesPage() {
   
 
   // Only initialize user if session is available
-  const user = useMemo(() => {
-  if (!userM) return null;
+  const userM = session?.user
+  const userMemo = useMemo(() => {
+    if (!userM) return null;
 
-  
-
-  return {
-    id: userM.id,
-    name: userM.username,
-    image: `https://localhost:3000/api/avatar/${userM.username}`
-  };
-}, [userM]);
+    return {
+      id: userM.id,
+      name: userM.username,
+      image: `https://studybuddy.rest/api/avatar/${userM.username}`
+    };
+  }, [userM]);
 
   const fetchTokens = useCallback(async () => {
-    if (!user?.id) return
+    if (!userMemo?.id) return
     
     try {
       // Fetch chat token
       const token = await tokenProvider()
       setChatToken(token)
+
+      const client = StreamChat.getInstance(process.env.NEXT_PUBLIC_STREAM_API_KEY!);
+      await client.connectUser(
+        {
+          id: userMemo.id,
+          name: userMemo.name,
+          image: userMemo.image
+        },
+        token
+      );
+
+      setUser(client.user);
     } catch (err) {
       console.error('Failed to fetch tokens:', err)
       toast.error(err instanceof Error ? err.message : 'Failed to initialize')
     }
-  }, [user?.id])
+  }, [userMemo?.id])
 
   useEffect(() => {
-    if (status === 'authenticated' && user?.id) {
+    if (status === 'authenticated' && userMemo?.id) {
       fetchTokens()
     }
-  }, [status, user?.id, fetchTokens])
-
-  // Set up SSE connection for notifications
-  useEffect(() => {
-    if (!user?.id) return
-
-    const eventSource = new EventSource(`/api/study-club/${partyCode}/notifications`)
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        if (data.type === 'new-join-request') {
-          toast.info(`New join request from ${data.data.username}!`)
-        } else if (data.type === 'member-joined') {
-          toast.success(`${data.data.username} joined the club!`)
-        } else if (data.type === 'member-left') {
-          toast.info(`${data.data.username} left the club`)
-        }
-      } catch (error) {
-        console.error('Error parsing SSE message:', error)
-      }
-    }
-
-    eventSource.onerror = (error) => {
-      console.error('SSE Error:', error)
-      eventSource.close()
-    }
-
-    return () => {
-      eventSource.close()
-    }
-  }, [user?.id, partyCode])
+  }, [status, userMemo?.id, fetchTokens])
 
   // Fetch club data including expiration time
-  const fetchClubData = async () => {
+  const fetchClubData = useCallback(async () => {
+    if (!partyCode || status === 'loading') return;
+    if (!session) {
+      router.push('/auth/signin');
+      return;
+    }
+
     try {
-      const res = await fetch(`/api/study-club/${partyCode}/member`);
-      const data = await res.json();
-      if (res.ok) {
+      const response = await fetch(`/api/study-club/${partyCode}/member`);
+      if (response.ok) {
+        const data = await response.json();
         setClubData(data);
+        setIsAdmin(data.isAdmin);
+      } else if (response.status === 401) {
+        router.push('/auth/signin');
+      } else if (response.status === 404) {
+        router.push('/study-club');
       }
     } catch (err) {
       console.error('Error fetching club data:', err);
     }
-  };
+  }, [partyCode, session, status, router]);
 
   useEffect(() => {
-    if (partyCode) {
-      fetchClubData();
-    }
-  }, [partyCode]);
+    fetchClubData();
+  }, [fetchClubData]);
 
   // Add time expiration check
   useEffect(() => {
@@ -192,7 +183,7 @@ export default function StudyClubActivitiesPage() {
         // If call doesn't exist, create it
         await call.create();
       }
-
+      
       // Set up call state
       setIsVideoOpen(true);
     } catch (error) {
@@ -233,7 +224,19 @@ export default function StudyClubActivitiesPage() {
     setHadActiveCall(false);
   };
 
-  if (status === 'loading' || !user || !chatToken) {
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchClubData();
+      toast.success('Data refreshed successfully');
+    } catch (error) {
+      toast.error('Failed to refresh data');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  if (status === 'loading' || !userMemo || !chatToken) {
     return (
       <div className="fixed inset-0 flex items-center justify-center ">
         <div className="text-center">
@@ -252,16 +255,27 @@ export default function StudyClubActivitiesPage() {
         {/* Main Content Area */}
         <div className="flex-1 relative overflow-y-auto">
           {!isVideoOpen && (
-            <div className="absolute top-4 left-4 z-10">
-              <h1 className="text-2xl font-bold text-accent">Study Club Activities</h1>
-              <p className="mt-2 text-sm text-gray-400">
-                Party Code: {partyCode}
-              </p>
-              {timeLeft && (
-                <p className="mt-1 text-sm text-gray-400">
-                  {timeLeft}
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-accent">Study Club Activities</h1>
+                <p className="mt-2 text-sm text-gray-400">
+                  Party Code: {partyCode}
                 </p>
-              )}
+                {timeLeft && (
+                  <p className="mt-1 text-sm text-gray-400">
+                    {timeLeft}
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="h-8 w-8"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
             </div>
           )}
           
@@ -272,7 +286,7 @@ export default function StudyClubActivitiesPage() {
       <StudyCLubVideoCall
         apiKey={process.env.NEXT_PUBLIC_STREAM_API_KEY!}
         token={chatToken}
-        user={user}
+        user={userMemo}
         callId={String(partyCode)}
         minimizeOnClose={true}
         onClose={handleCallClose}
@@ -416,7 +430,7 @@ export default function StudyClubActivitiesPage() {
             className="fixed bottom-24 right-6 w-full max-w-md sm:w-96 h-[600px] bg-gray-900 rounded-lg shadow-xl overflow-hidden z-40"
 
           >
-            <ChatProvider user={user} token={chatToken}>
+            <ChatProvider user={userMemo} token={chatToken}>
               <ChatBox isActivitiesPage={true} className="h-full" onClose={() => setIsChatOpen(false)} />
             </ChatProvider>
           </motion.div>
