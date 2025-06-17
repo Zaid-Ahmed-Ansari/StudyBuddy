@@ -1,7 +1,7 @@
 'use client'
 import { StreamVideo, StreamVideoClient } from "@stream-io/video-react-sdk";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { tokenProvider } from "@/src/actions/stream.actions";
 import { Loader } from "@/components/loader";
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY!;
@@ -13,6 +13,7 @@ export default function StreamVideoProvider({
   const { data: session } = useSession();
   const user = session?.user;
   const [videoClient, setvideoClient] = useState<StreamVideoClient>();
+  const clientRef = useRef<StreamVideoClient | null>(null);
   useEffect(() => {
     if (!user) return;
     if (!apiKey) throw new Error("Stream API key is missing");
@@ -21,10 +22,12 @@ export default function StreamVideoProvider({
       user: {
         id: user?.id,
         name: user?.username,
-        image: user?.avatar || "https://i.pravatar.cc/150?img=50",
+        image: `https://localhost:3000/api/show-avatar/${user.username}`
+
       },
       tokenProvider,
     });
+    clientRef.current = client;
     setvideoClient(client)
   }, [user]);
 

@@ -3,8 +3,9 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { BentoGrid, BentoCard } from '@/components/ui/bento-grid';
-import { Bookmark, Bot, CalendarDays, ChartColumn, Home, NotebookPen, NotebookText, Save } from 'lucide-react';
+import { Bookmark, Bot, CalendarDays, ChartColumn, Home, NotebookPen, NotebookText, Save, User } from 'lucide-react';
 import { Suspense } from 'react';
+import { UserAvatar } from '@/components/UserAvatar';
 
 // Loading component for the entire dashboard
 function DashboardLoading() {
@@ -48,33 +49,42 @@ export default function DashboardPage() {
   if (!user) return <p className="text-center py-20">Loading your dashboard...</p>;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Welcome, <span className="text-accent">{user.username}</span> 👋</h1>
-          <p className="text-gray-600 mt-1">Here&#39;s your StudyBuddy control center.</p>
-        </div>
-        <div>
-          <button
-            className="mt-4 sm:mt-0 px-4 py-2 bg-accent hover:bg-accent/70 text-white rounded-md transition"
-          >
-            Party Code: {user.partyCode}
-          </button>
-          <button
-            className="mt-4 sm:mt-0 px-4 ml-2 mr-2 py-2 bg-accent text-white rounded-md transition"
-          >
-            <Link href={`/u/${user.id}`}>
-              Profile
-            </Link>
-          </button>
-          <button
-            onClick={() => signOut()}
-            className="mt-4 sm:mt-0 px-4 hover:cursor-pointer py-2 bg-accent hover:bg-accent/70 text-white rounded-md transition"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <header className="flex  sm:flex-row flex-wrap gap-4 items-start sm:items-center justify-between">
+  <UserAvatar
+    username={user.username}
+    size={64}
+    className="mb-2 sm:mb-0 shrink-0"
+  />
+
+  <div className="flex-1 min-w-[200px]">
+    <h1 className="text-2xl sm:text-3xl font-bold">
+      Welcome, <span className="text-accent">{user.username}</span> 👋
+    </h1>
+    <p className="text-gray-600 mt-1 text-sm sm:text-base">
+      Here&#39;s your StudyBuddy control center.
+    </p>
+  </div>
+
+  <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
+    <button className="px-4 py-2 bg-accent hover:bg-accent/70 text-white rounded-md transition text-sm">
+      Party Code: {user.partyCode}
+    </button>
+    <Link
+      href={`/u/${user.id}`}
+      className="px-4 py-2 bg-accent text-white rounded-md text-sm"
+    >
+      Profile
+    </Link>
+    <button
+      onClick={() => signOut()}
+      className="px-4 py-2 bg-accent hover:bg-accent/70 text-white rounded-md transition text-sm"
+    >
+      Logout
+    </button>
+  </div>
+</header>
+
 
       <Suspense fallback={<DashboardLoading />}>
         <BentoGrid className=''>

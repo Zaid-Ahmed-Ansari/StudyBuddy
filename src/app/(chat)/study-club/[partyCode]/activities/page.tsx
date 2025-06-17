@@ -33,13 +33,20 @@ export default function StudyClubActivitiesPage() {
 
   // Add club data state
   const [clubData, setClubData] = useState<{ expiresAt: string } | null>(null);
+  
 
   // Only initialize user if session is available
-  const user = useMemo(() => userM ? {
+  const user = useMemo(() => {
+  if (!userM) return null;
+
+  
+
+  return {
     id: userM.id,
     name: userM.username,
-    image: userM.image || "https://i.pravatar.cc/150?img=50"
-  } : null, [userM])
+    image: `https://localhost:3000/api/avatar/${userM.username}`
+  };
+}, [userM]);
 
   const fetchTokens = useCallback(async () => {
     if (!user?.id) return

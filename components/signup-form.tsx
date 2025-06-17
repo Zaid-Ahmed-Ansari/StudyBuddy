@@ -31,6 +31,7 @@ export function SignUpForm() {
       username: "",
       email: "",
       password: "",
+      agreeToTerms: false,
     },
   })
   const [username, setusername] = useState('')
@@ -141,6 +142,42 @@ export function SignUpForm() {
             </FormItem>
          </> )}
         />
+        <FormField
+  control={form.control}
+  name="agreeToTerms"
+  render={({ field }) => (
+    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+      <FormControl>
+        <input
+          type="checkbox"
+          checked={field.value}
+          onChange={field.onChange}
+          className="mt-1"
+        />
+      </FormControl>
+      <div className="space-y-1 leading-none text-sm text-muted-foreground">
+        I agree to the{" "}
+        <a
+          href="/terms"
+          target="_blank"
+          className="text-accent underline"
+        >
+          Terms & Conditions
+        </a>{" "}
+        and{" "}
+        <a
+          href="/privacy"
+          target="_blank"
+          className="text-accent underline"
+        >
+          Privacy Policy
+        </a>.
+      </div>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
         <Button type="submit" disabled={isSubmitting}className="w-full bg-accent hover:bg-accent/80">
            {
             isSubmitting ? (<>

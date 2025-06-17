@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 
 import {User} from "next-auth"
 import { useSession } from "next-auth/react";
+import Image from "next/image";
+import { UserAvatar } from "./UserAvatar";
 
 export function SidebarDemo() {
   const { data: session } = useSession();
@@ -87,8 +89,7 @@ export function SidebarDemo() {
                 label: user?.username || "",
                 href: `/u/${user?.username}`,
                 icon: (
-                  <UserCircle2 className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-
+                  <UserAvatar username={user?.username} size={24} />
                 ),
               }}
             />

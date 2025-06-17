@@ -7,6 +7,8 @@ import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import 'highlight.js/styles/github-dark.css' // Switched to dark theme for code blocks
+import { UserAvatar } from './UserAvatar'
+import { useSession } from 'next-auth/react'
 
 
 export default function AiChat({chatId,userId}: {chatId: string,userId: string}) {
@@ -151,6 +153,8 @@ export default function AiChat({chatId,userId}: {chatId: string,userId: string})
       console.error('Save error', error)
     }
   }
+  const {data:session} = useSession()
+  const user = session?.user
 
   return (
     <div className="min-h-screen text-white flex flex-col md:mr-76 ">
@@ -179,10 +183,10 @@ export default function AiChat({chatId,userId}: {chatId: string,userId: string})
               <div className={`flex gap-2 items-start max-w-[85%] ${msg.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
                 <div 
                   className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${
-                    msg.isUser ? 'bg-accent/60' : 'bg-gray-700'
+                    msg.isUser ? '' : 'bg-gray-700'
                   }`}
                 >
-                  {msg.isUser ? <User size={16} /> : <Bot size={16} />}
+                  {msg.isUser ? <UserAvatar username={user.username} size={24} /> : <Bot size={16} />}
                 </div>
                 
                 <div

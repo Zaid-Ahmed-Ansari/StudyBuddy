@@ -7,6 +7,7 @@ import { Mic, MicOff, X, Users, Loader2, UserCircle2, RefreshCw } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { UserAvatar } from './UserAvatar';
 
 type Member = {
   _id: string;
@@ -129,7 +130,7 @@ export default function MembersList({ isActivitiesPage = false, className = '' }
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
-                  {/* <UserCircle2 className="w-10 h-10 text-gray-400" /> */}
+                  <UserAvatar username={member.username} size={40} />
                 </div>
                 <div className="min-w-0">
                   <p className="font-medium text-white truncate">{member.username}</p>

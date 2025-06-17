@@ -36,7 +36,7 @@ const VerifyAccount = () => {
         code: data.code,
       });
       toast.success(response.data.message);
-      router.replace("/sign-in");
+      router.replace("/select-avatar?username=" + params.username);
     } catch (error) {
       console.log("Error in signup of user", error);
       const axiosError = error as AxiosError<ApiResponse>;

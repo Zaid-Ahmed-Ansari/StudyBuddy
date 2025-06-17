@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { string } from "zod";
 
 interface IMessage {
   text: string; // encrypted base64 string
@@ -31,6 +32,11 @@ export interface IUser {
   partyCode: string;
   chats: IChat[];
   saved: Message[];
+  avatar?: {
+    seed: string;
+    style: string;
+  };
+  hasSelectedAvatar: boolean;
 }
 
 // Message Schema — no encryption in schema itself
@@ -119,12 +125,29 @@ const UserSchema = new Schema<IUser>(
     partyCode: { type: String, required: true },
     chats: [ChatSchema],
     saved: [MessageSchema],
+    avatar: {
+      seed:{
+        type: String,
+        required: false,
+        default: "", // local default avatar seed
+      },
+      style: {
+        type: String,
+        required: false,
+        default: "", // local default avatar style
+      } // local default avatar
+    },
+    hasSelectedAvatar: {
+  type: Boolean,
+  default: false,
+}
   },
   {
     timestamps: true,
     toJSON: { getters: false },
     toObject: { getters: false },
-  }
+  },
+  
 );
 
 export const UserModel =

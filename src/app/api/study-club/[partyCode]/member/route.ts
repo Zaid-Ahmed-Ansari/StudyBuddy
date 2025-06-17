@@ -29,8 +29,7 @@ export async function GET(
     if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    const { params } = context;
-    const partyCode = await params;
+    const { partyCode } = await context.params;
     const club = await StudyClubModel.findOne({ partyCode})
       .select('partyCode partyName admin members pendingRequests createdAt expiresAt')
       .populate<{ members: User[] }>('members', 'username email createdAt')

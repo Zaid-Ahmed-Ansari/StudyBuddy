@@ -9,5 +9,7 @@ export const usernameValidation = z
 export const signUpSchema = z.object({
     username: usernameValidation,
     email: z.string().email('Invalid email address'),
-    password : z.string().min(6, "Password must be at least 6 characters long")
-})  
+    password : z.string().min(6, "Password must be at least 6 characters long"),
+    agreeToTerms: z.boolean().refine((val) => val === true, {
+      message: "You must accept the Terms & Conditions.",
+    })})

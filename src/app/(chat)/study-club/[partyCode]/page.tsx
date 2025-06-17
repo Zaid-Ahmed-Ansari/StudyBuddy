@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { UserAvatar } from '@/components/UserAvatar';
 
 type Member = {
   _id: string;
@@ -487,8 +488,9 @@ export default function ClubDashboard() {
             {clubData.members.map((member) => (
               <div
                 key={member._id}
-                className="flex justify-between items-center p-4 border rounded-lg"
+                className="flex gap-3 items-center p-4 border rounded-lg"
               >
+                <UserAvatar username={member.username} size={54}/>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium text-accent">{member.username}</h3>
