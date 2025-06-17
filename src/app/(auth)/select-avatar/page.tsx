@@ -5,7 +5,7 @@ import { UserModel } from '@/src/model/User';
 import AvatarPicker from '@/components/AvatarPicker'; 
 
 interface Props {
-  searchParams: { username: string }; 
+  searchParams: Promise<{ username: string }>; 
 }
 
 export default async function SelectAvatarPage({ searchParams }: Props) {
