@@ -19,6 +19,21 @@ export async function POST(req: Request) {
     );
   }
 
+  // Minimal text processing that preserves markdown structure
+  function cleanText(text: string): string {
+    return text
+      // Only remove excessive blank lines (3 or more)
+      .replace(/\n\s*\n\s*\n/g, '\n\n')
+      // Clean up trailing spaces but preserve intentional line breaks
+      .replace(/[ \t]+$/gm, '')
+      // Ensure code blocks are properly formatted
+      .replace(/```(\w+)?\s*\n([\s\S]*?)\n```/g, (match, lang, code) => {
+        const language = lang || '';
+        const cleanCode = code.trim();
+        return `\`\`\`${language}\n${cleanCode}\n\`\`\``;
+      });
+  }
+  
   try {
     const stream = await ai.models.generateContentStream({
       model: "gemini-2.0-flash-001",
@@ -26,22 +41,29 @@ export async function POST(req: Request) {
 
 RESPONSE GUIDELINES:
 1. Answer only educational or academic questions, including casual greetings in an educational context.
-2. For non-educational topics, politely decline with: "I'm focused on helping with educational topics. How can I assist with your studies instead?"
-3. Don't explain in too many words.
+
+2. Explain in detail, providing thorough explanations and examples when necessary.
+3. Use appropriate formatting for different types of content, such as code, mathematics, or essays.
+4. Act more like a tutor than a search engine, focusing on teaching and understanding rather than just providing answers.
+
 
 SUBJECT-SPECIFIC FORMATTING:
 
-CODE QUESTIONS:
-- Format all code in Markdown code blocks with appropriate language tags (\`\`python, \`\`javascript, etc.)
-- Include proper indentation, meaningful variable names, and clear comments
-- Explain key concepts and logic when providing code solutions
-- Test code examples mentally before sharing to ensure they work as expected
+CODE:
+You are a coding tutor. Provide a clear, well-structured explanation for the following topic:
+**${prompt}**
+Format the response in **Markdown** and follow this structure:
 
-MATHEMATICS:
-- Use appropriate mathematical notation and formatting
-- Show step-by-step solutions for complex problems
-- Explain each step clearly, highlighting important concepts
-- Include visual representations or diagrams when helpful
+
+1. **Title Heading** (with the main concept)
+2. **Brief Explanation** (what and why)
+3. **Step-by-Step Guide** (with subheadings)
+4. **Syntax-Highlighted Code Blocks**
+5. **Final Complete Example** (if applicable)
+
+Use triple backticks for code blocks. Highlight important tips with emojis or bold text. Avoid unnecessary fluff. Assume the user is a student or beginner.
+
+
 
 WRITING/HUMANITIES:
 - Provide clear, concise explanations of concepts
@@ -72,7 +94,9 @@ User's prompt: ${prompt}
         try {
           for await (const chunk of stream) {
             if (chunk.text) {
-              controller.enqueue(encoder.encode(chunk.text));
+              // Apply very minimal cleaning to preserve natural text flow
+              const processedText = cleanText(chunk.text);
+              controller.enqueue(encoder.encode(processedText));
             }
           }
           controller.close();

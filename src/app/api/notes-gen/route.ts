@@ -7,7 +7,7 @@ export const runtime = 'edge';
 
 export async function POST(req: Request) {
   const ai = new GoogleGenAI({apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY});
-  const { topic, subject } = await req.json();
+  const { topic, subject, additionalInfo } = await req.json();
   const ip = req.headers.get('x-forwarded-for') || 'unknown';
   const limitCheck = rateLimit(ip.toString(), 10, 60 * 1000); // 10 reqs per minute
 
@@ -25,6 +25,7 @@ export async function POST(req: Request) {
 
 **Topic:** ${topic}  
 **Subject:** ${subject}
+**Additional Info:** ${additionalInfo}
 
 ## FORMAT GUIDELINES:
 

@@ -15,6 +15,7 @@ export default function AiChat() {
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
+  const [additionalInfo, setAdditionalInfo] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [savedIndex, setSavedIndex] = useState<number | null>(null);
 
@@ -44,11 +45,12 @@ export default function AiChat() {
     
     setSubject("");
     setTopic("");
+    setAdditionalInfo("");
     const controller = new AbortController();
     setAbortController(controller);
     setIsThinking(true);
 
-    const userInput = `Subject: ${subjectVal}\nTopic: ${topicVal}`;
+    const userInput = `Subject: ${subjectVal}\nTopic: ${topicVal}\nAdditional Info: ${additionalInfo.trim()}`;
     setMessages(prev => [
       ...prev,
       { text: userInput, isUser: true },
@@ -60,7 +62,7 @@ export default function AiChat() {
         method: 'POST',
         signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: subjectVal, topic: topicVal }),
+        body: JSON.stringify({ subject: subjectVal, topic: topicVal, additionalInfo: additionalInfo.trim() }),
       });
 
       const data = await res.json();
@@ -307,6 +309,16 @@ export default function AiChat() {
                 className="w-full bg-gray-900 text-white px-10 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent border border-gray-700 placeholder-gray-500"
               />
             </div>
+          </div>
+          <div className="relative">
+            <NotebookPen className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            <textarea
+              placeholder="Additional Information (optional)"
+              value={additionalInfo}
+              onChange={(e) => setAdditionalInfo(e.target.value)}
+              rows={2}
+              className="w-full bg-gray-900 text-white px-10 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent border border-gray-700 placeholder-gray-500"
+            />
           </div>
           <button
             onClick={handleSubmit}

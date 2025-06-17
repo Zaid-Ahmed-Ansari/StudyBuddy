@@ -40,14 +40,14 @@ export default function StudyClubActivitiesPage() {
   // Only initialize user if session is available
   const userM = session?.user
   const userMemo = useMemo(() => {
-    if (!userM) return null;
+  if (!userM) return null;
 
-    return {
-      id: userM.id,
-      name: userM.username,
+  return {
+    id: userM.id,
+    name: userM.username,
       image: `https://studybuddy.rest/api/avatar/${userM.username}`
-    };
-  }, [userM]);
+  };
+}, [userM]);
 
   const fetchTokens = useCallback(async () => {
     if (!userMemo?.id) return
@@ -105,7 +105,7 @@ export default function StudyClubActivitiesPage() {
   }, [partyCode, session, status, router]);
 
   useEffect(() => {
-    fetchClubData();
+      fetchClubData();
   }, [fetchClubData]);
 
   // Add time expiration check
@@ -257,15 +257,15 @@ export default function StudyClubActivitiesPage() {
           {!isVideoOpen && (
             <div className="absolute top-4 left-4 z-10 flex items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-accent">Study Club Activities</h1>
-                <p className="mt-2 text-sm text-gray-400">
-                  Party Code: {partyCode}
+              <h1 className="text-2xl font-bold text-accent">Study Club Activities</h1>
+              <p className="mt-2 text-sm text-gray-400">
+                Party Code: {partyCode}
+              </p>
+              {timeLeft && (
+                <p className="mt-1 text-sm text-gray-400">
+                  {timeLeft}
                 </p>
-                {timeLeft && (
-                  <p className="mt-1 text-sm text-gray-400">
-                    {timeLeft}
-                  </p>
-                )}
+              )}
               </div>
               <Button
                 variant="ghost"

@@ -359,7 +359,7 @@ export default function ClubDashboard() {
               onClick={handleRefresh}
               disabled={isRefreshing}
               className="h-8 w-8"
-            >
+              >
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>
               {clubData.isAdmin ? (
@@ -489,9 +489,9 @@ export default function ClubDashboard() {
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <button className="flex items-center gap-1 bg-accent text-white px-3 py-1 rounded hover:bg-blue-700 transition">
-                          <UserPlus className="w-4 h-4" />
-                          Make Admin
-                        </button>
+                      <UserPlus className="w-4 h-4" />
+                      Make Admin
+                    </button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="bg-white/90 backdrop-blur-sm">
                         <AlertDialogHeader>
