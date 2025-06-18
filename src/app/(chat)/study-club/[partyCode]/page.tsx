@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Check, X, Trash2, Loader2, Users, Clock, RefreshCw, LogOut, UserPlus, MessageCircleIcon, Settings } from 'lucide-react';
+import { Check, X, Trash2, Loader2, Users, Clock, RefreshCw, LogOut, UserPlus, MessageCircleIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,11 +52,9 @@ export default function ClubDashboard() {
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
   const [showKickDialog, setShowKickDialog] = useState(false);
   const [memberToKick, setMemberToKick] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchClubData = useCallback(async () => {
-    if (!partyCode) return;
-    if (status === 'loading') return;
+    if (!partyCode || status === 'loading') return;
     if (!session) {
       router.push('/auth/signin');
       return;
@@ -84,14 +82,12 @@ export default function ClubDashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [partyCode, router]);
+  }, [partyCode, session, status, router]);
 
-  // Initial fetch only when partyCode changes
+  // Initial fetch
   useEffect(() => {
-    if (status === 'authenticated') {
-      fetchClubData();
-    }
-  }, [partyCode, fetchClubData]);
+    fetchClubData();
+  }, [fetchClubData]);
 
   // Timer effect
   useEffect(() => {
@@ -278,18 +274,6 @@ export default function ClubDashboard() {
     }
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await fetchClubData();
-      toast.success('Data refreshed successfully');
-    } catch (error) {
-      toast.error('Failed to refresh data');
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -353,15 +337,14 @@ export default function ClubDashboard() {
               )}
             </div>
             <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="h-8 w-8"
+              <button
+                onClick={fetchClubData}
+                className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                disabled={isLoading}
               >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </Button>
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </button>
               {clubData.isAdmin ? (
                 <button
                   onClick={handleLeaveClub}
@@ -423,7 +406,6 @@ export default function ClubDashboard() {
                   key={user._id}
                   className="flex justify-between items-center p-4 border rounded-lg"
                 >
-                  <UserAvatar username={user.username} size={54}/>
                   <div>
                     <h3 className="font-medium text-accent">{user.username}</h3>
                     <p className="text-sm text-gray-600">{user.email}</p>
@@ -489,9 +471,9 @@ export default function ClubDashboard() {
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <button className="flex items-center gap-1 bg-accent text-white px-3 py-1 rounded hover:bg-blue-700 transition">
-                      <UserPlus className="w-4 h-4" />
-                      Make Admin
-                    </button>
+                          <UserPlus className="w-4 h-4" />
+                          Make Admin
+                        </button>
                       </AlertDialogTrigger>
                       <AlertDialogContent className="bg-white/90 backdrop-blur-sm">
                         <AlertDialogHeader>

@@ -321,8 +321,27 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
                         ),
                       }}
                     >
+                      
                       {msg.text}
                     </ReactMarkdown>
+                    {isThinking && i === messages.length - 1 && !msg.isUser && msg.text === '' &&  (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex gap-2 items-start max-w-[85%]"
+          >
+            
+            <div className="p-3 rounded-2xl rounded-tl-none bg-gray-800 text-sm text-gray-300">
+              <div className="flex gap-2">
+                <div className="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
                   </div>
                   
                   <div className='text-[10px] text-zinc-400 mt-2 text-left'>
@@ -345,7 +364,7 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
                       >
                         {savedIndex === i ? 
                           <span className="flex items-center gap-1 text-accent">
-                            <BookmarkCheck size={14} /> Saved
+                            <Save size={14} /> Saved
                           </span> : 
                           <Save size={14} />
                         }
@@ -358,26 +377,7 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
           ))}
         </AnimatePresence>
 
-        {isThinking && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex gap-2 items-start max-w-[85%]"
-          >
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-700 flex-shrink-0">
-              <Bot size={16} />
-            </div>
-            <div className="p-3 rounded-2xl rounded-tl-none bg-gray-800 text-sm text-gray-300">
-              <div className="flex gap-2">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
+        
         <div ref={messagesEndRef} />
       </div>
 

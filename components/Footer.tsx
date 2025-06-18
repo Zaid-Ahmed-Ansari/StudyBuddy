@@ -45,7 +45,7 @@ export default function Footer() {
                 AI Chatbot
               </Link>
               <Link
-              href="/notes-generator"
+              href={`/notes-generator/${user?.id}`}
               className="hover:text-accent transition-colors duration-200"
               >
                 Notes Generator

@@ -40,10 +40,11 @@ export default function ContactPage() {
       setIsSending(true);
       
       const templateParams = {
-        from_name: data.name,
-        from_email: data.email,
+        name: data.name,
+        email: data.email,
         subject: data.subject,
         message: data.message,
+        time: new Date().toLocaleString(),
         to_email: 'ahmedzaid2627@gmail.com',
       };
 

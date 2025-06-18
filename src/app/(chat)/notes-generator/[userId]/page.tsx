@@ -1,4 +1,5 @@
 import GenAiChat from '@/components/genai-chat'
+import NotesLandingPage from '@/components/NotesLandingPage';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -49,7 +50,7 @@ const page = () => {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <GenAiChat />
+      <NotesLandingPage />
     </div>
   )
 }

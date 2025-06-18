@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowDown, X, Send, Bot, User, Copy, Check, BookmarkCheck, FileText, Languages, NotebookPen } from 'lucide-react';
+import { ArrowDown, X, Send, Bot, User, Copy, Check, BookmarkCheck, FileText, Languages, NotebookPen, Save } from 'lucide-react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
-import 'highlight.js/styles/github-dark.css'; // Dark theme for code blocks
+import 'highlight.js/styles/github-dark.css';
 import { cn } from "@/lib/utils";
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
-export default function AiChat() {
-  const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
+export default function GenAIChat({ chatId, userId }: { chatId: string; userId: string }) {
+  const [messages, setMessages] = useState<{ text: string; isUser: boolean; timestamp: string }[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [subject, setSubject] = useState("");
@@ -23,7 +25,26 @@ export default function AiChat() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
+  const { data: session } = useSession();
+  const user = session?.user;
+  const router = useRouter();
+
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!chatId) return;
+
+      try {
+        const res = await axios.get(`/api/genai-chat/${userId}/${chatId}/message`);
+        setMessages(res.data?.messages || []);
+      } catch (error) {
+        console.error('Failed to load chat messages:', error);
+      }
+    };
+
+    fetchMessages();
+  }, [chatId, userId]);
 
   useEffect(() => {
     const container = chatContainerRef.current;
@@ -51,10 +72,12 @@ export default function AiChat() {
     setIsThinking(true);
 
     const userInput = `Subject: ${subjectVal}\nTopic: ${topicVal}\nAdditional Info: ${additionalInfo.trim()}`;
+    const currentTime = new Date().toISOString();
+    
     setMessages(prev => [
       ...prev,
-      { text: userInput, isUser: true },
-      { text: '', isUser: false },
+      { text: userInput, isUser: true, timestamp: currentTime },
+      { text: '', isUser: false, timestamp: currentTime }
     ]);
 
     try {
@@ -83,9 +106,26 @@ export default function AiChat() {
           )
         );
       }
+
+      // Save messages only after the complete response is received
+      if (streamed) {
+        try {
+          await axios.post(`/api/genai-chat/${userId}/${chatId}/message`, {
+            messages: [
+              { text: userInput, isUser: true, timestamp: currentTime },
+              { text: streamed, isUser: false, timestamp: currentTime }
+            ]
+          });
+        } catch (err) {
+          console.error('Failed to save AI message:', err);
+        }
+      }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        setMessages(prev => [...prev, { text: 'Error fetching response.', isUser: false }]);
+        setMessages(prev => [
+          ...prev,
+          { text: 'Error fetching response.', isUser: false, timestamp: new Date().toISOString() }
+        ]);
       }
     } finally {
       setIsThinking(false);
@@ -100,18 +140,15 @@ export default function AiChat() {
   };
 
   const handleCopy = (text: string, index: number) => {
-    // Ensure we're copying a string
-    const textToCopy = typeof text === 'string' ? text : JSON.stringify(text);
-    navigator.clipboard.writeText(textToCopy);
+    navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 1200);
   };
 
-  const handleSave = async (message: string | object, index: number) => {
+  const handleSave = async (message: string, index: number) => {
     try {
-      const contentToSave = typeof message === 'string' ? message : JSON.stringify(message);
       await axios.post('/api/user/save', {
-        content: contentToSave,
+        content: message,
         createdAt: new Date().toISOString()
       });
       setSavedIndex(index);
@@ -121,8 +158,6 @@ export default function AiChat() {
     }
   };
 
-  const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
   function handleSubmit() {
     if (subject.trim() && topic.trim()) {
       handleSendMessage(subject.trim(), topic.trim());
@@ -130,17 +165,17 @@ export default function AiChat() {
   }
 
   return (
-    <div className="min-h-screen text-white flex flex-col ">
-      <header className="p-4 text-center border mt-5 mr-5 ml-5 rounded-full text-2xl font-bold  shadow-xl">
+    <div className="min-h-screen text-white flex flex-col md:mr-76">
+      <header className="p-4 text-center font-sans text-2xl font-bold font-mono border rounded-full mt-5 shadow-xl">
         <div className="flex items-center justify-center gap-2">
-          <NotebookPen size={24} className="text-accent" />
+          <Bot size={24} className="text-accent" />
           <span className='text-accent'>StudyBuddy Notes Generator</span>
         </div>
       </header>
 
       <div
         ref={chatContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-6 space-y-4 custom-scrollbar mt-[20px] max-w-6xl mx-auto w-full"
+        className="flex-1 overflow-y-auto px-4 py-6 space-y-4 custom-scrollbar"
         style={{ scrollBehavior: 'smooth' }}
       >
         <AnimatePresence initial={false}>
@@ -173,7 +208,9 @@ export default function AiChat() {
                   {msg.isUser ? (
                     <div className="text-zinc-100 whitespace-pre-line">
                       {msg.text}
-                      <div className="block text-[10px] text-zinc-300 mt-1 text-right">{timestamp}</div>
+                      <div className="block text-[10px] text-zinc-300 mt-1 text-right">
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   ) : (
                     <div className="prose prose-invert max-w-none text-sm">
@@ -206,40 +243,10 @@ export default function AiChat() {
                           }
                         }}
                       >
+                        
                         {typeof msg.text === 'string' ? msg.text : 'Invalid content format'}
                       </ReactMarkdown>
-                      <div className="block text-[10px] text-zinc-400 mt-1 text-right">{timestamp}</div>
-                    </div>
-                  )}
-
-                  {!msg.isUser && (
-                    <div className={`flex gap-2 mt-2 text-xs text-gray-400 ${msg.isUser ? 'justify-start' : 'justify-end'}`}>
-                      <button
-                        onClick={() => handleCopy(msg.text, i)}
-                        className="hover:text-white transition flex items-center gap-1"
-                        title="Copy"
-                      >
-                        {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />}
-                      </button>
-                      <button
-                        onClick={() => handleSave(msg.text, i)}
-                        className="hover:text-green-400 transition flex items-center gap-1"
-                        title="Save"
-                      >
-                        {savedIndex === i ? 
-                          <span className="flex items-center gap-1"><BookmarkCheck size={14} /> Saved</span> : 
-                          <BookmarkCheck size={14} />
-                        }
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {isThinking && (
+                      {isThinking && i === messages.length - 1 && !msg.isUser && msg.text === '' &&  (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -259,13 +266,48 @@ export default function AiChat() {
             </div>
           </motion.div>
         )}
+                      <div className="block text-[10px] text-zinc-400 mt-1 text-right">
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  )}
+
+                  {!msg.isUser && (
+                    <div className={`flex gap-2 mt-2 text-xs text-gray-400 ${msg.isUser ? 'justify-start' : 'justify-end'}`}>
+                      <button
+                        onClick={() => handleCopy(msg.text, i)}
+                        className="hover:text-white transition flex items-center gap-1"
+                        title="Copy"
+                      >
+                        {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />}
+                      </button>
+                      <button
+                        onClick={() => handleSave(msg.text, i)}
+                        className="hover:text-green-400 transition flex items-center gap-1"
+                        title="Save"
+                      >
+                        {savedIndex === i ? 
+                          <span className="flex items-center gap-1"><BookmarkCheck size={14} /> Saved</span> : 
+                          <Save size={14} />
+                        }
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        
+        
         <div ref={messagesEndRef} />
       </div>
 
       {showScrollButton && (
         <button
           onClick={scrollToBottom}
-          className="fixed bottom-32 right-6 bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-full shadow-lg z-50 transition-all duration-200 transform hover:scale-110 active:scale-90"
+          className="fixed bottom-24 right-6 bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-full shadow-lg z-50 transition-all duration-200 transform hover:scale-110 active:scale-90"
         >
           <ArrowDown size={20} />
         </button>
@@ -280,7 +322,7 @@ export default function AiChat() {
         </button>
       )}
 
-      <div className="sticky bottom-0 w-full  pt-6 pb-4 px-4">
+      <div className="sticky bottom-0 w-full pt-6 pb-4 px-4">
         <div className="flex flex-col gap-3 max-w-6xl mx-auto bg-gray-800 rounded-xl border border-gray-700 p-3 shadow-lg">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -401,7 +443,7 @@ export default function AiChat() {
             opacity: 0.4;
           }
         }
-        
+
         /* Remove horizontal scrolling from message bubbles */
         pre {
           white-space: pre-wrap;

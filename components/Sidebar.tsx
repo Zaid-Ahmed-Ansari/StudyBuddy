@@ -38,7 +38,7 @@ export function SidebarDemo() {
     },
     {
       label: "Notes Generator",
-      href: "/notes-generator",
+      href:  `/notes-generator/${user?.id}`,
       icon: (
         <NotebookPenIcon className="text-white dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),

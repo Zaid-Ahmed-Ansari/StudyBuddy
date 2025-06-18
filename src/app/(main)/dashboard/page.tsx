@@ -121,7 +121,7 @@ export default function DashboardPage() {
             background={<div className="bg-blue-100 h-full" />}
             Icon={NotebookPen}
             description="Generate notes by entering subject and relevant topic."
-            href="/notes-generator"
+            href={`/notes-generator/${user?.id}`}
             cta="Generate Notes"
           />
           <BentoCard
