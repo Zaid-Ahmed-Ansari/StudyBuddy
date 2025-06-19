@@ -139,7 +139,7 @@
   
 }
   .bg-chat-user {
-    background: linear-gradient(135deg, #4c51bf, #2d3748); /* Accent Colors */
+    background: linear-gradient(135deg, #4c51bf, #2d3748); 
     color: white;
     border-radius: 20px;
     padding: 12px 18px;

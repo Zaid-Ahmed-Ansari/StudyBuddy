@@ -206,12 +206,16 @@ export default function HeroGeometric({
           </motion.div>
           {/*  */}
           {user ? (
+            
+              
+            
             <Link href="/dashboard">
               
               <Button className="bg-accent hover:bg-accent/70 cursor-pointer">
                 Get Started
               </Button>
             </Link>
+            
           ) : (
             <Btn15 />
           )}

@@ -1,92 +1,91 @@
-"use client"
+'use client'
 
-import { useSession } from "next-auth/react"
-import { useState } from "react"
-import axios from "axios"
-import Card_10 from "@/src/components/kokonutui/card-10"
+import { useSession } from 'next-auth/react'
+import { useState } from 'react'
+import axios from 'axios'
+import { Mail, UserCircle, Loader2 } from 'lucide-react'
+import { UserAvatar } from '@/components/UserAvatar'
 
 export default function ProfilePage() {
   const { data: session } = useSession()
-  const [username, setUsername] = useState(session?.user?.name || "")
-  const [email, setEmail] = useState(session?.user?.email || "")
+  const [username, setUsername] = useState(session?.user?.username || '')
+  const [email, setEmail] = useState(session?.user?.email || '')
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState("")
+  const [message, setMessage] = useState('')
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await axios.post("/api/user/update-profile", {
+      await axios.post('/api/user/update-profile', {
         name: username,
         email,
       })
-      setMessage("Profile updated successfully!")
+      setMessage('✅ Profile updated successfully!')
     } catch (error) {
-      setMessage("Something went wrong while updating profile.")
+      setMessage('❌ Something went wrong while updating profile.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="max-w-screen mx-auto mt-12 p-6 sm:p-10 h-screen shadow-md rounded-md border">
-      <h1 className="text-2xl font-bold text-center text-accent mb-[40px]">
-        Profile Settings
-      </h1>
-      <div className="flex md:flex-row flex-col items-center justify-between md:justify-center gap-10">
-
-     
-      <div className=" ">
-
-      <Card_10/>
-      </div>
-      <div className="">
-
-      
-        <h1 className="text-bold text-3xl text-accent mb-5">Change your credentials here:</h1>
-      <form onSubmit={handleUpdate} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-1">Change your username</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full rounded-md border px-4 py-2 focus:outline-none focus:ring focus:ring-primary"
-            required
-          />
-        </div>
-         
-        <div>
-          <label className="block text-sm font-medium mb-1">Change your email</label>
-          <input
-            type="email"
-            value={email}
-            disabled={session?.user?.provider === "google"} // Optional: lock Google email
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border px-4 py-2 focus:outline-none focus:ring focus:ring-primary"
-            required
-          />
+    <div className="min-h-screen  flex items-center justify-center px-4 py-12">
+      <div className="max-w-5xl w-full bg-gray-900/80 backdrop-blur-lg rounded-2xl shadow-lg border border-gray-800 p-8 md:p-12 flex flex-col md:flex-row gap-10">
+        {/* Profile Info Card */}
+        <div className="md:w-1/2 flex flex-col items-center text-center gap-4">
+          <UserAvatar username={username} size={100}/>
+          <h2 className="text-2xl font-bold text-white">{username}</h2>
+          <p className="text-sm text-gray-400 flex items-center gap-1">
+            <Mail className="w-4 h-4" />
+            {session?.user?.email || 'No email provided'}
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Logged in as <strong>{email}</strong>
+          </p>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-accent text-white py-2 rounded-md hover:bg-accent/90 transition"
-        >
-          {loading ? "Updating..." : "Update Profile"}
-        </button>
-      </form>
+        {/* Update Form */}
+        <div className="md:w-1/2 space-y-6">
+          <h3 className="text-xl font-semibold text-white mb-2">Update your profile</h3>
+          <form onSubmit={handleUpdate} className="space-y-5">
+            <div>
+              <label className="block text-sm text-gray-300 mb-1">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full rounded-md bg-gray-800 text-white border border-gray-700 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
 
-      {message && (
-        <p className="mt-4 text-center text-sm text-muted-foreground">{message}</p>
-      )}
+            <div>
+              <label className="block text-sm text-gray-300 mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={session?.user?.provider === 'google'}
+                className="w-full rounded-md bg-gray-800 text-white border border-gray-700 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                required
+              />
+            </div>
 
-      <div className="mt-8 text-sm text-center text-muted-foreground">
-        <p>Logged in as <strong>{session?.user?.email}</strong></p>
-        {/* <p>Saved Responses: <strong>🔖 Coming Soon</strong></p> */}
-      </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-accent hover:bg-accent/50 text-white py-2 rounded-md transition flex items-center justify-center"
+            >
+              {loading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Update Profile'}
+            </button>
+          </form>
+
+          {message && (
+            <div className="text-sm text-center text-muted-foreground mt-2">{message}</div>
+          )}
+        </div>
       </div>
     </div>
-     </div>
   )
 }
