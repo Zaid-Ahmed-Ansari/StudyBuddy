@@ -1,5 +1,5 @@
 'use client'
-
+import React, { memo, useCallback, useMemo } from 'react';
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Copy, Check, Send, X, ArrowDown, BookmarkCheck, Bot, User, Save } from 'lucide-react'
@@ -13,6 +13,64 @@ import 'highlight.js/styles/github-dark.css'
 import 'katex/dist/katex.min.css'
 import { UserAvatar } from './UserAvatar'
 import { useSession } from 'next-auth/react'
+import { ChatMessage } from './ChatMessage'
+
+
+
+
+
+const ChatInput = memo(function ChatInput({
+  input,
+  setInput,
+  handleSendMessage,
+  isThinking,
+  handleAbort
+}: {
+  input: string;
+  setInput: (val: string) => void;
+  handleSendMessage: (msg: string) => void;
+  isThinking: boolean;
+  handleAbort: () => void;
+}) {
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSendMessage(input);
+      }}
+      className="flex items-center gap-3 rounded-full bg-gray-800 p-2 border border-gray-700 shadow-lg max-w-4xl mx-auto"
+    >
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Ask a question..."
+        className="flex-1 bg-transparent px-4 py-2 rounded-full focus:outline-none placeholder-gray-400 text-sm"
+      />
+      <div className="flex gap-2 items-center">
+        {isThinking && (
+          <button
+            onClick={handleAbort}
+            className="p-2 bg-red-600 hover:bg-red-700 rounded-full text-white transition-all duration-200 hover:scale-105 active:scale-95"
+            title="Abort"
+            type="button"
+          >
+            <X size={18} />
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={isThinking || !input.trim()}
+          className="p-2 bg-indigo-600 hover:bg-indigo-500 rounded-full text-white transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+          aria-label="Send"
+        >
+          <Send size={18} />
+        </button>
+      </div>
+    </form>
+  );
+});
+
 
 export default function AiChat({chatId, userId}: {chatId: string, userId: string}) {
   const [messages, setMessages] = useState<{ text: string; isUser: boolean; timestamp: string }[]>([])
@@ -26,7 +84,14 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
 
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start', // or 'end', depending on layout
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -55,16 +120,28 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
   }, [])
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    const timeout = setTimeout(() => {
+      scrollToBottom();
+    }, 100); // wait for DOM to render
+
+    return () => clearTimeout(timeout);
+  }, [messages]);
+  const isUserNearBottom = () => {
+    const container = chatContainerRef.current;
+    if (!container) return false;
+    const threshold = 80; // pixels from bottom
+    return (
+      container.scrollHeight - container.scrollTop - container.clientHeight < threshold
+    );
+  };
 
   const handleSendMessage = async (userMessage: string) => {
     if (!userMessage.trim()) return;
     const contextMessages = messages.slice(-10);
     const formattedContext = contextMessages.map(msg => ({
-  role: msg.isUser ? 'user' : 'assistant',
-  content: msg.text
-}));
+      role: msg.isUser ? 'user' : 'assistant',
+      content: msg.text
+    }));
     setInput('');
     const controller = new AbortController();
     setAbortController(controller);
@@ -114,14 +191,16 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
           lastUpdate = now;
         }
       }
-
+      if (isUserNearBottom()) {
+        scrollToBottom();
+      }
       // Final update to ensure we have the complete message
       setMessages(prev =>
         prev.map((msg, idx) =>
           idx === prev.length - 1 ? { ...msg, text: buffer } : msg
         )
       );
-
+      console.log('AI response received:', buffer);
       // Save messages only after the complete response is received
       if (buffer) {
         try {
@@ -154,13 +233,14 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
     setIsThinking(false)
   }
 
-  const handleCopy = (text: string, index: number) => {
+  // Memoize handlers so their reference doesn't change on every render
+  const handleCopy = useCallback((text: string, index: number) => {
     navigator.clipboard.writeText(text)
     setCopiedIndex(index)
     setTimeout(() => setCopiedIndex(null), 1200)
-  }
+  }, [])
 
-  const handleSave = async (message: string, index: number) => {
+  const handleSave = useCallback(async (message: string, index: number) => {
     try {
       await axios.post('/api/user/save', {
         content: message,
@@ -171,7 +251,10 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
     } catch (error) {
       console.error('Save error', error)
     }
-  }
+  }, [])
+
+  // Memoize the message list so the array reference doesn't change unless messages actually change
+  const memoizedMessages = useMemo(() => messages, [messages])
 
   const {data: session} = useSession()
   const user = session?.user
@@ -191,198 +274,20 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
         style={{ scrollBehavior: 'smooth' }}
       >
         <AnimatePresence initial={false}>
-          {messages.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              transition={{ duration: 0.25 }}
-              className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'} mb-2`}
-            >
-              <div className={`flex gap-2 items-start max-w-[85%] ${msg.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div 
-                  className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${
-                    msg.isUser ? '' : 'bg-gray-700'
-                  }`}
-                >
-                  {msg.isUser ? <UserAvatar username={user?.username} size={24} /> : <Bot size={16} />}
-                </div>
-                
-                <div
-                  className={`p-4 rounded-2xl shadow-md text-sm relative group break-words max-w-fit ${
-                    msg.isUser
-                      ? 'bg-accent/60 text-white rounded-tr-none'
-                      : 'bg-gray-800 text-gray-100 rounded-tl-none'
-                  }`}
-                >
-                  <div className="prose prose-invert prose-sm max-w-none">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkMath, remarkGfm]}
-                      rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                      components={{
-                        // Enhanced code block rendering
-                        code({ node, className, children, ...props }) {
-                          // node is a Code AST node, which has an 'inline' property
-                          // See: https://github.com/remarkjs/react-markdown#use-custom-components
-                          // @ts-ignore
-                          const isInline = node && (node.inline === true);
-                          const match = /language-(\w+)/.exec(className || '')
-                          const language = match ? match[1] : ''
-                          
-                          if (isInline) {
-                            return (
-                              <code 
-                                className="bg-gray-900 px-2 py-1 rounded text-xs font-mono border border-gray-700" 
-                                {...props}
-                              >
-                                {children}
-                              </code>
-                            )
-                          }
-                          
-                          return (
-                            <div className="relative mt-3 mb-3 rounded-lg overflow-hidden border border-gray-700">
-                              {language && (
-                                <div className="bg-gray-900 px-3 py-2 text-xs text-gray-300 border-b border-gray-700 flex justify-between items-center">
-                                  <span className="font-medium">{language}</span>
-                                  <button
-                                    onClick={() => handleCopy(String(children), i)}
-                                    className="p-1 bg-gray-700 hover:bg-gray-600 rounded transition text-gray-300 hover:text-white"
-                                    aria-label="Copy code"
-                                  >
-                                    {copiedIndex === i ? <Check size={12} /> : <Copy size={12} />}
-                                  </button>
-                                </div>
-                              )}
-                              <pre className="overflow-x-auto bg-gray-900 p-4 text-gray-100 text-xs leading-relaxed">
-                                <code className={className} {...props}>
-                                  {children}
-                                </code>
-                              </pre>
-                              {!language && (
-                                <button
-                                  onClick={() => handleCopy(String(children), i)}
-                                  className="absolute top-2 right-2 p-1 bg-gray-700 hover:bg-gray-600 rounded transition"
-                                  aria-label="Copy code"
-                                >
-                                  {copiedIndex === i ? <Check size={12} /> : <Copy size={12} />}
-                                </button>
-                              )}
-                            </div>
-                          )
-                        },
-                        
-                        // Enhanced heading styles
-                        h1: ({children}) => <h1 className="text-xl font-bold text-accent mb-3 mt-4">{children}</h1>,
-                        h2: ({children}) => <h2 className="text-lg font-bold text-accent mb-2 mt-3">{children}</h2>,
-                        h3: ({children}) => <h3 className="text-md font-semibold text-accent mb-2 mt-3">{children}</h3>,
-                        
-                        // Enhanced list styles
-                        ul: ({children}) => <ul className="list-disc list-inside space-y-1 ml-2">{children}</ul>,
-                        ol: ({children}) => <ol className="list-decimal list-inside space-y-1 ml-2">{children}</ol>,
-                        li: ({children}) => <li className="text-gray-200">{children}</li>,
-                        
-                        
-                        blockquote: ({children}) => (
-                          <blockquote className="border-l-4 border-accent pl-4 py-2 bg-gray-700/50 rounded-r italic text-gray-200 my-3">
-                            {children}
-                          </blockquote>
-                        ),
-                        
-                        // Enhanced table styles
-                        table: ({children}) => (
-                          <div className="overflow-x-auto my-3">
-                            <table className="w-full border-collapse border border-gray-600 rounded">
-                              {children}
-                            </table>
-                          </div>
-                        ),
-                        th: ({children}) => (
-                          <th className="border border-gray-600 px-3 py-2 bg-gray-700 font-semibold text-left">
-                            {children}
-                          </th>
-                        ),
-                        td: ({children}) => (
-                          <td className="border border-gray-600 px-3 py-2">{children}</td>
-                        ),
-                        
-                        // Enhanced paragraph spacing
-                        p: ({children}) => <p className="text-gray-200 leading-relaxed mb-2">{children}</p>,
-                        
-                        // Strong/bold text
-                        strong: ({children}) => <strong className="font-bold text-white">{children}</strong>,
-                        
-                        // Enhanced link styles
-                        a: ({href, children}) => (
-                          <a 
-                            href={href} 
-                            className="text-accent hover:text-accent/80 underline transition-colors"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {children}
-                          </a>
-                        ),
-                      }}
-                    >
-                      
-                      {msg.text}
-                    </ReactMarkdown>
-                    {isThinking && i === messages.length - 1 && !msg.isUser && msg.text === '' &&  (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex gap-2 items-start max-w-[85%]"
-          >
-            
-            <div className="p-3 rounded-2xl rounded-tl-none bg-gray-800 text-sm text-gray-300">
-              <div className="flex gap-2">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-                  </div>
-                  
-                  <div className='text-[10px] text-zinc-400 mt-2 text-left'>
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                  
-                  {!msg.isUser && (
-                    <div className="flex gap-2 mt-3 text-xs text-gray-400 justify-end">
-                      <button
-                        onClick={() => handleCopy(msg.text, i)}
-                        className="hover:text-white transition flex items-center gap-1 p-1 rounded hover:bg-gray-700"
-                        title="Copy message"
-                      >
-                        {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />}
-                      </button>
-                      <button
-                        onClick={() => handleSave(msg.text, i)}
-                        className="hover:text-accent transition flex items-center gap-1 p-1 rounded hover:bg-gray-700"
-                        title="Save message"
-                      >
-                        {savedIndex === i ? 
-                          <span className="flex items-center gap-1 text-accent">
-                            <Save size={14} /> Saved
-                          </span> : 
-                          <Save size={14} />
-                        }
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+          {memoizedMessages.map((msg, i) => (
+            <ChatMessage
+              key={msg.timestamp + (msg.text ? msg.text.slice(0, 8) : '')}
+              msg={msg}
+              i={i}
+              copiedIndex={copiedIndex === i ? copiedIndex : null}
+              savedIndex={savedIndex === i ? savedIndex : null}
+              user={user}
+              isThinking={isThinking && i === messages.length - 1 && !msg.isUser}
+              handleCopy={handleCopy}
+              handleSave={handleSave}
+            />
           ))}
         </AnimatePresence>
-
-        
         <div ref={messagesEndRef} />
       </div>
 
@@ -396,41 +301,13 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
       )}
 
       <div className="sticky bottom-0 w-full pt-6 pb-4 px-4">
-        <form
-          onSubmit={e => {
-            e.preventDefault()
-            handleSendMessage(input)
-          }}
-          className="flex items-center gap-3 rounded-full bg-gray-800 p-2 border border-gray-700 shadow-lg max-w-4xl mx-auto"
-        >
-          <input
-            type="text"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            placeholder="Ask a question..."
-            className="flex-1 bg-transparent px-4 py-2 rounded-full focus:outline-none placeholder-gray-400 text-sm"
-          />
-          <div className="flex gap-2 items-center">
-            {isThinking && (
-              <button
-                onClick={handleAbort}
-                className="p-2 bg-red-600 hover:bg-red-700 rounded-full text-white transition-all duration-200 hover:scale-105 active:scale-95"
-                title="Abort"
-                type="button"
-              >
-                <X size={18} />
-              </button>
-            )}
-            <button
-              type="submit"
-              disabled={isThinking || !input.trim()}
-              className="p-2 bg-indigo-600 hover:bg-indigo-500 rounded-full text-white transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-              aria-label="Send"
-            >
-              <Send size={18} />
-            </button>
-          </div>
-        </form>
+       <ChatInput
+input={input}
+setInput={setInput}
+handleSendMessage={handleSendMessage}
+isThinking={isThinking}
+handleAbort={handleAbort}
+/>
       </div>
 
       <style jsx global>{`

@@ -1,5 +1,6 @@
 import { rateLimit } from "@/src/lib/rate-limit";
 import { GoogleGenAI } from "@google/genai";
+import { re } from "mathjs";
 
 export const runtime = "edge";
 
@@ -21,39 +22,56 @@ export async function POST(req: Request) {
   const userContext = context.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n');
   // Minimal text processing that preserves markdown structure
   function cleanText(text: string): string {
-    return text
-      // Only remove excessive blank lines (3 or more)
-      .replace(/\n\s*\n\s*\n/g, '\n\n')
-      // Clean up trailing spaces but preserve intentional line breaks
-      .replace(/[ \t]+$/gm, '')
-      // Ensure code blocks are properly formatted
-      .replace(/```(\w+)?\s*\n([\s\S]*?)\n```/g, (match, lang, code) => {
-        const language = lang || '';
-        const cleanCode = code.trim();
-        return `\`\`\`${language}\n${cleanCode}\n\`\`\``;
-      });
-  }
+  return text
+    .replace(/\n\s*\n\s*\n/g, '\n\n') // Reduce 3+ newlines to 2
+    .replace(/[ \t]+$/gm, '')         // Trim trailing spaces
+    // Fix multiline code blocks
+    .replace(/```(\w+)?\s*\n([\s\S]*?)\n```/g, (match, lang, code) => {
+      const language = lang || '';
+      const cleanCode = code.trim();
+      return `\`\`\`${language}\n${cleanCode}\n\`\`\``;
+    })
+    // Convert inline backtick `words` or `phrases` (not real code) to bold
+    .replace(/(^|[^`])`([^`\n]{1,50})`([^`]|$)/g, (match, before, content, after) => {
+      // Heuristic: skip if the content looks like code (e.g., has parens, brackets, operators)
+      const looksLikeCode = /[=(){}[\];<>+\-*\/]/.test(content);
+      if (looksLikeCode) return match; // leave it as code
+      return `${before}**${content.trim()}**${after}`;
+    });
+}
+
+
+
   
   try {
     const stream = await ai.models.generateContentStream({
-      model: "gemini-2.0-flash-001",
-      contents: `You are StudyBuddy, a knowledgeable and supportive educational assistant designed to help with academic questions across all subjects. You maintain a friendly, professional tone while focusing exclusively on educational content.
+      model: "gemini-2.5-flash-lite-preview-06-17",
+      contents: `
+The previous messages and the context for your next messages are ${userContext}
+User's prompt: ${prompt}
+`,config: {
+      thinkingConfig: {
+        thinkingBudget: 0, // Disables thinking
+      },
+      systemInstruction:  `You are StudyBuddy, a knowledgeable and supportive educational assistant designed to help with academic questions across all subjects. You maintain a friendly, professional tone while focusing exclusively on educational content.
 
-      The previous messages and the context for your next messages are ${userContext}
+      
 
 RESPONSE GUIDELINES:
 1. Answer only educational or academic questions, including casual greetings in an educational context.
 
-2. Explain in detail, providing thorough explanations and examples when necessary.
-3. Use appropriate formatting for different types of content, such as code, mathematics, or essays.
-4. Act more like a tutor than a search engine, focusing on teaching and understanding rather than just providing answers.
+
+2. Use appropriate formatting for different types of content, such as code, mathematics, or essays.
+3. Act more like a tutor than a search engine, focusing on teaching and understanding rather than just providing answers.
+4. NEVER use single backticks ( \`like this\` ) for emphasis. Use **bold** or *italics* instead.
+Only use backticks for actual code or variable names.
+5. Only use the number of words necessary to explain what user wants. Don't use extra words.
 
 
 SUBJECT-SPECIFIC FORMATTING:
 
 CODE:
-You are a coding tutor. Provide a clear, well-structured explanation for the following topic:
-**${prompt}**
+
 Format the response in **Markdown** and follow this structure:
 
 
@@ -63,7 +81,9 @@ Format the response in **Markdown** and follow this structure:
 4. **Syntax-Highlighted Code Blocks**
 5. **Final Complete Example** (if applicable)
 
-Use triple backticks for code blocks. Highlight important tips with emojis or bold text. Avoid unnecessary fluff. Assume the user is a student or beginner.
+❗Do NOT use single backticks (\`) around regular words or phrases.
+Only use backticks for code, variable names, or syntax-specific text.
+
 
 
 
@@ -84,12 +104,10 @@ GENERAL FEATURES:
 - Avoid unnecessary advice beyond what was specifically requested
 - Respond to religion-based academic questions factually without bias
 
-Always prioritize accuracy and educational value in your responses.
-
-User's prompt: ${prompt}
-`,
+Always prioritize accuracy and educational value in your responses.`
+    }
     });
-
+    
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
@@ -107,6 +125,7 @@ User's prompt: ${prompt}
         }
       },
     });
+    
 
     return new Response(readable, {
       headers: {

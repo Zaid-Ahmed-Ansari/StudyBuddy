@@ -89,7 +89,7 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased `}
         >
           <AuthProvider>
-       
+       <StreamVideoProvider>
         
           <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-zinc-900 to-accent dark:from-black dark:via-zinc-800/40 dark:to-black px-4">
             
@@ -105,7 +105,7 @@ export default function RootLayout({
             </div>
           </div>
         
-      
+      </StreamVideoProvider>
       </AuthProvider>
         </body>
         

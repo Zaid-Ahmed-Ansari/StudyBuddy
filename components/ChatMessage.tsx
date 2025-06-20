@@ -1,0 +1,120 @@
+// components/ChatMessage.tsx
+'use client'
+
+import { memo } from 'react'
+import { motion } from 'framer-motion'
+import { Check, Copy, Save, Bot, User } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkMath from 'remark-math'
+import remarkGfm from 'remark-gfm'
+import rehypeKatex from 'rehype-katex'
+import rehypeHighlight from 'rehype-highlight'
+import { UserAvatar } from './UserAvatar'
+
+interface MessageProps {
+  msg: {
+    text: string
+    isUser: boolean
+    timestamp: string
+  }
+  i: number
+  copiedIndex: number | null
+  savedIndex: number | null
+  user?: any
+  isThinking: boolean
+  handleCopy: (text: string, i: number) => void
+  handleSave: (text: string, i: number) => void
+}
+
+export const ChatMessage = memo(({
+  msg,
+  i,
+  copiedIndex,
+  savedIndex,
+  user,
+  isThinking,
+  handleCopy,
+  handleSave
+}: MessageProps) => {
+  return (
+    <motion.div
+      key={i}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 15 }}
+      transition={{ duration: 0.25 }}
+      className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'} mb-2`}
+    >
+      <div className={`flex gap-2 items-start max-w-[85%] ${msg.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${msg.isUser ? '' : 'bg-gray-700'}`}>
+          {msg.isUser ? <UserAvatar username={user?.username} size={24} /> : <Bot size={16} />}
+        </div>
+
+        <div className={`p-4 rounded-2xl shadow-md text-sm relative group break-words max-w-fit ${msg.isUser ? 'bg-accent/60 text-white rounded-tr-none' : 'bg-gray-800 text-gray-100 rounded-tl-none'}`}>
+          <div className="prose prose-invert prose-sm max-w-none">
+            {(!isThinking || msg.text) && (
+              <ReactMarkdown
+                remarkPlugins={[remarkMath, remarkGfm]}
+                rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                components={{
+                  code({ node, className, children, ...props }) {
+                    // @ts-ignore
+                    const isInline = node && node.inline === true;
+                    const match = /language-(\w+)/.exec(className || '')
+                    const language = match ? match[1] : ''
+                    if (isInline) {
+                      return (
+                        <code className="bg-gray-900 px-2 py-1 rounded text-xs font-mono border border-gray-700" {...props}>
+                          {children}
+                        </code>
+                      )
+                    }
+
+                    return (
+                      <div className="relative mt-3 mb-3 rounded-lg overflow-hidden border border-gray-700">
+                        {language && (
+                          <div className="bg-gray-900 px-3 py-2 text-xs text-gray-300 border-b border-gray-700 flex justify-between items-center">
+                            <span className="font-medium">{language}</span>
+                            <button
+                              onClick={() => handleCopy(String(children), i)}
+                              className="p-1 bg-gray-700 hover:bg-gray-600 rounded transition text-gray-300 hover:text-white"
+                              aria-label="Copy code"
+                            >
+                              {copiedIndex === i ? <Check size={12} /> : <Copy size={12} />}
+                            </button>
+                          </div>
+                        )}
+                        <pre className="overflow-x-auto bg-gray-900 p-4 text-gray-100 text-xs leading-relaxed">
+                          <code className={className} {...props}>{children}</code>
+                        </pre>
+                      </div>
+                    )
+                  },
+                }}
+              >
+                {msg.text}
+              </ReactMarkdown>
+            )}
+          </div>
+
+          <div className='text-[10px] text-zinc-400 mt-2 text-left'>
+            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+
+          {!msg.isUser && (
+            <div className="flex gap-2 mt-3 text-xs text-gray-400 justify-end">
+              <button onClick={() => handleCopy(msg.text, i)} className="hover:text-white transition flex items-center gap-1 p-1 rounded hover:bg-gray-700" title="Copy message">
+                {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />}
+              </button>
+              <button onClick={() => handleSave(msg.text, i)} className="hover:text-accent transition flex items-center gap-1 p-1 rounded hover:bg-gray-700" title="Save message">
+                {savedIndex === i ? <span className="flex items-center gap-1 text-accent"><Save size={14} /> Saved</span> : <Save size={14} />}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
+})
+
+ChatMessage.displayName = 'ChatMessage'
