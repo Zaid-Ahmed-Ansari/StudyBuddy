@@ -20,10 +20,13 @@ export async function POST(req: Request) {
   try {
     if (mode === 'flowchart') {
       const { text } =  await ai.models.generateContent({
-        model:'gemini-2.0-flash-001',
-        contents: `Generate a clean, valid Mermaid.js flowchart diagram for this description: "${prompt}". 
+        model:'gemini-2.5-flash-lite-preview-06-17',
+        contents: prompt,
+        config:{
+          systemInstruction:`Generate a clean, valid Mermaid.js flowchart diagram for the description given in prompt. 
            ONLY return the Mermaid diagram code between triple backticks \`\`\`mermaid ... \`\`\`.
-           Do NOT include any explanation, extra text, or markdown outside the code block. Process the code properly for ERD's`,
+           Do NOT include any explanation, extra text, or markdown outside the code block. Process the code properly for ERD's`
+        }
       });
 
       return NextResponse.json({ mermaid: text });

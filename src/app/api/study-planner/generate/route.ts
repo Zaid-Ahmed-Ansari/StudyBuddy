@@ -30,7 +30,24 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
+    function cleanText(text: string): string {
+  return text
+    .replace(/\n\s*\n\s*\n/g, '\n\n') // Reduce 3+ newlines to 2
+    .replace(/[ \t]+$/gm, '')         // Trim trailing spaces
+    // Fix multiline code blocks
+    .replace(/```(\w+)?\s*\n([\s\S]*?)\n```/g, (match, lang, code) => {
+      const language = lang || '';
+      const cleanCode = code.trim();
+      return `\`\`\`${language}\n${cleanCode}\n\`\`\``;
+    })
+    // Convert inline backtick `words` or `phrases` (not real code) to bold
+    .replace(/(^|[^`])`([^`\n]{1,50})`([^`]|$)/g, (match, before, content, after) => {
+      // Heuristic: skip if the content looks like code (e.g., has parens, brackets, operators)
+      const looksLikeCode = /[=(){}[\];<>+\-*\/]/.test(content);
+      if (looksLikeCode) return match; // leave it as code
+      return `${before}**${content.trim()}**${after}`;
+    });
+}
     const ip = req.headers.get('x-forwarded-for') || 'unknown';
     const limitCheck = rateLimit(ip.toString(), 10, 60 * 1000); // 10 req/min
 
@@ -168,10 +185,11 @@ seperate it accordingly
 `;
 
     const { text } = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-001',
+      model: 'gemini-2.5-flash-lite-preview-06-17',
       contents: prompt,
+      
     });
-    const cleanMarkdown = text.replace(/```markdown([\s\S]*?)```/g, (_, content) => content.trim());
+    const cleanMarkdown = cleanText(text);
 
     return NextResponse.json({ plan: cleanMarkdown});
   } catch (err) {

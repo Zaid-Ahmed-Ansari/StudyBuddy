@@ -17,15 +17,33 @@ export async function POST(req: Request) {
       { status: 429 }
     );
   }
-
+function cleanText(text: string): string {
+  return text
+    .replace(/\n\s*\n\s*\n/g, '\n\n') // Reduce 3+ newlines to 2
+    .replace(/[ \t]+$/gm, '')         // Trim trailing spaces
+    // Fix multiline code blocks
+    .replace(/```(\w+)?\s*\n([\s\S]*?)\n```/g, (match, lang, code) => {
+      const language = lang || '';
+      const cleanCode = code.trim();
+      return `\`\`\`${language}\n${cleanCode}\n\`\`\``;
+    })
+    // Convert inline backtick `words` or `phrases` (not real code) to bold
+    .replace(/(^|[^`])`([^`\n]{1,50})`([^`]|$)/g, (match, before, content, after) => {
+      // Heuristic: skip if the content looks like code (e.g., has parens, brackets, operators)
+      const looksLikeCode = /[=(){}[\];<>+\-*\/]/.test(content);
+      if (looksLikeCode) return match; // leave it as code
+      return `${before}**${content.trim()}**${after}`;
+    });
+}
   try {
     const { text } =  await ai.models.generateContent({
-      model: 'gemini-2.0-flash-001',
-      contents: `You are a precise, expert note-taker skilled in creating concise yet comprehensive study materials. Generate clear, scannable notes for:
-
-**Topic:** ${topic}  
-**Subject:** ${subject}
-**Additional Info:** ${additionalInfo}
+      model: 'gemini-2.5-flash-lite-preview-06-17',
+      contents: `Topic: ${topic}
+Subject: ${subject}
+Additional Info: ${additionalInfo}`,
+      config:{
+        systemInstruction:`
+        You are a precise, expert note-taker skilled in creating concise yet comprehensive study materials. Generate clear, scannable notes for:
 
 ## FORMAT GUIDELINES:
 
@@ -54,11 +72,11 @@ export async function POST(req: Request) {
 - Include a brief summary (3-4 bullet points) at the end
 
 Keep the total length focused and concise - aim for notes that would fit on 2-3 pages if printed.
-`,
-
+`
+      }
     });
-
-    return NextResponse.json({ text });
+    const cleanMarkdown = cleanText(text);
+    return NextResponse.json({ text: cleanMarkdown });
   } catch (err) {
     console.error('Error generating notes:', err);
     return NextResponse.json(
