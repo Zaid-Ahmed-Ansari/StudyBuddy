@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
   });
 
-  const { prompt } = await req.json();
+  const { prompt,context } = await req.json();
   const ip = req.headers.get("x-forwarded-for") || "unknown";
   const limitCheck = rateLimit(ip.toString(), 10, 60 * 1000); // 10 reqs/min
 
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       { status: 429 }
     );
   }
-
+  const userContext = context.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n');
   // Minimal text processing that preserves markdown structure
   function cleanText(text: string): string {
     return text
@@ -38,6 +38,8 @@ export async function POST(req: Request) {
     const stream = await ai.models.generateContentStream({
       model: "gemini-2.0-flash-001",
       contents: `You are StudyBuddy, a knowledgeable and supportive educational assistant designed to help with academic questions across all subjects. You maintain a friendly, professional tone while focusing exclusively on educational content.
+
+      The previous messages and the context for your next messages are ${userContext}
 
 RESPONSE GUIDELINES:
 1. Answer only educational or academic questions, including casual greetings in an educational context.

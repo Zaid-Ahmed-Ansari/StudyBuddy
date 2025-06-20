@@ -60,6 +60,11 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
 
   const handleSendMessage = async (userMessage: string) => {
     if (!userMessage.trim()) return;
+    const contextMessages = messages.slice(-10);
+    const formattedContext = contextMessages.map(msg => ({
+  role: msg.isUser ? 'user' : 'assistant',
+  content: msg.text
+}));
     setInput('');
     const controller = new AbortController();
     setAbortController(controller);
@@ -79,7 +84,7 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
         method: 'POST',
         signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userMessage })
+        body: JSON.stringify({ prompt: userMessage, context: formattedContext})
       });
 
       if (!res.body) throw new Error('No response body');
