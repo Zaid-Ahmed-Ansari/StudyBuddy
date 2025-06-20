@@ -9,6 +9,7 @@ import { SidebarDemo } from "@/components/Sidebar";
 import { Toaster } from "sonner";
 import StreamVideoProvider from "@/src/context/StreamVideoProvider";
 import { FloatingCallProvider } from "@/src/context/FloatingCallProvider";
+import 'katex/dist/katex.min.css';
 
 
 const geistSans = Geist({

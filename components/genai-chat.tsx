@@ -10,6 +10,9 @@ import 'highlight.js/styles/github-dark.css';
 import { cn } from "@/lib/utils";
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import remarkMath from 'remark-math';
+import remarkGfm from 'remark-gfm';
+import rehypeKatex from 'rehype-katex';
 
 export default function GenAIChat({ chatId, userId }: { chatId: string; userId: string }) {
   const [messages, setMessages] = useState<{ text: string; isUser: boolean; timestamp: string }[]>([]);
@@ -215,37 +218,117 @@ export default function GenAIChat({ chatId, userId }: { chatId: string; userId: 
                   ) : (
                     <div className="prose prose-invert max-w-none text-sm">
                       <ReactMarkdown
-                        rehypePlugins={[rehypeHighlight]}
-                        components={{
-                          code(props) {
-                            const { inline, children, ...rest } = props as { inline?: boolean; children: React.ReactNode }
-                            return inline ? (
-                              <code className="bg-gray-900 px-1 rounded text-xs" {...rest}>
+                      remarkPlugins={[remarkMath, remarkGfm]}
+                      rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                      components={{
+                        // Enhanced code block rendering
+                        code({ node, className, children, ...props }) {
+                          // node is a Code AST node, which has an 'inline' property
+                          // See: https://github.com/remarkjs/react-markdown#use-custom-components
+                          // @ts-ignore
+                          const isInline = node && (node.inline === true);
+                          const match = /language-(\w+)/.exec(className || '')
+                          const language = match ? match[1] : ''
+                          
+                          if (isInline) {
+                            return (
+                              <code 
+                                className="bg-gray-900 px-2 py-1 rounded text-xs font-mono border border-gray-700" 
+                                {...props}
+                              >
                                 {children}
                               </code>
-                            ) : (
-                              <div className="relative mt-2 mb-2">
-                                <pre className="overflow-x-auto rounded-md bg-gray-900 p-3 text-gray-100 text-xs">
-                                  <code {...rest}>{children}</code>
-                                </pre>
+                            )
+                          }
+                          
+                          return (
+                            <div className="relative mt-3 mb-3 rounded-lg overflow-hidden border border-gray-700">
+                              {language && (
+                                <div className="bg-gray-900 px-3 py-2 text-xs text-gray-300 border-b border-gray-700 flex justify-between items-center">
+                                  <span className="font-medium">{language}</span>
+                                  <button
+                                    onClick={() => handleCopy(String(children), i)}
+                                    className="p-1 bg-gray-700 hover:bg-gray-600 rounded transition text-gray-300 hover:text-white"
+                                    aria-label="Copy code"
+                                  >
+                                    {copiedIndex === i ? <Check size={12} /> : <Copy size={12} />}
+                                  </button>
+                                </div>
+                              )}
+                              <pre className="overflow-x-auto bg-gray-900 p-4 text-gray-100 text-xs leading-relaxed">
+                                <code className={className} {...props}>
+                                  {children}
+                                </code>
+                              </pre>
+                              {!language && (
                                 <button
                                   onClick={() => handleCopy(String(children), i)}
-                                  className="absolute top-2 right-2 p-1 bg-gray-700 hover:bg-gray-600 rounded-md transition"
+                                  className="absolute top-2 right-2 p-1 bg-gray-700 hover:bg-gray-600 rounded transition"
                                   aria-label="Copy code"
                                 >
-                                  {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />}
+                                  {copiedIndex === i ? <Check size={12} /> : <Copy size={12} />}
                                 </button>
-                              </div>
-                            )
-                          },
-                          p(props) {
-                            return <p className="my-1" {...props} />;
-                          }
-                        }}
-                      >
+                              )}
+                            </div>
+                          )
+                        },
                         
-                        {typeof msg.text === 'string' ? msg.text : 'Invalid content format'}
-                      </ReactMarkdown>
+                        // Enhanced heading styles
+                        h1: ({children}) => <h1 className="text-xl font-bold text-accent mb-3 mt-4">{children}</h1>,
+                        h2: ({children}) => <h2 className="text-lg font-bold text-accent mb-2 mt-3">{children}</h2>,
+                        h3: ({children}) => <h3 className="text-md font-semibold text-accent mb-2 mt-3">{children}</h3>,
+                        
+                        // Enhanced list styles
+                        ul: ({children}) => <ul className="list-disc list-inside space-y-1 ml-2">{children}</ul>,
+                        ol: ({children}) => <ol className="list-decimal list-inside space-y-1 ml-2">{children}</ol>,
+                        li: ({children}) => <li className="text-gray-200">{children}</li>,
+                        
+                        
+                        blockquote: ({children}) => (
+                          <blockquote className="border-l-4 border-accent pl-4 py-2 bg-gray-700/50 rounded-r italic text-gray-200 my-3">
+                            {children}
+                          </blockquote>
+                        ),
+                        
+                        // Enhanced table styles
+                        table: ({children}) => (
+                          <div className="overflow-x-auto my-3">
+                            <table className="w-full border-collapse border border-gray-600 rounded">
+                              {children}
+                            </table>
+                          </div>
+                        ),
+                        th: ({children}) => (
+                          <th className="border border-gray-600 px-3 py-2 bg-gray-700 font-semibold text-left">
+                            {children}
+                          </th>
+                        ),
+                        td: ({children}) => (
+                          <td className="border border-gray-600 px-3 py-2">{children}</td>
+                        ),
+                        
+                        // Enhanced paragraph spacing
+                        p: ({children}) => <p className="text-gray-200 leading-relaxed mb-2">{children}</p>,
+                        
+                        // Strong/bold text
+                        strong: ({children}) => <strong className="font-bold text-white">{children}</strong>,
+                        
+                        // Enhanced link styles
+                        a: ({href, children}) => (
+                          <a 
+                            href={href} 
+                            className="text-accent hover:text-accent/80 underline transition-colors"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {children}
+                          </a>
+                        ),
+                      }}
+                    >
+                      
+                      {msg.text}
+                    </ReactMarkdown>
                       {isThinking && i === messages.length - 1 && !msg.isUser && msg.text === '' &&  (
           <motion.div
             initial={{ opacity: 0 }}

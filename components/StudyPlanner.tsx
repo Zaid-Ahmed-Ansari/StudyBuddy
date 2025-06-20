@@ -21,8 +21,13 @@ import {
   FileText,
   GraduationCap,
   Send,
-  X
+  X,
+  Check,
+  Copy
 } from 'lucide-react';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import rehypeHighlight from 'rehype-highlight';
 
 const Mermaid = dynamic(() => import('@/components/MermaidRenderer'), { ssr: false });
 
@@ -55,6 +60,7 @@ export default function StudyPlanner() {
 
   const [generatedPlan, setGeneratedPlan] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [mermaidBlocks, setMermaidBlocks] = useState<string[]>([]);
   const [savedIndex, setSavedIndex] = useState<number | null>(null);
   const planRef = useRef<HTMLDivElement>(null);
@@ -68,7 +74,11 @@ export default function StudyPlanner() {
       });
     }
   };
-
+const handleCopy = (text: string, index: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 1200);
+  };
   const removeSubject = (subject: string) => {
     setStudyPlan({
       ...studyPlan,
@@ -442,84 +452,117 @@ export default function StudyPlanner() {
       <div className="border border-t-0 border-accent/10 rounded-b-lg p-5 bg-white/5">
         <div ref={planRef} className="prose-dark max-w-none">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
-            components={{
-              code({ node, inline, className, children, ...props }: any) {
-                const isMermaid = className?.includes('language-mermaid');
-                return isMermaid ? (
-                  <div className="w-full overflow-x-auto my-4">
-                    <div className="min-w-[300px] max-w-full">
-                      <Mermaid chart={String(children)} />
-                    </div>
-                  </div>
-                ) : inline ? (
-                  <code className="bg-muted/20 text-muted-foreground px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
-                    {children}
-                  </code>
-                ) : (
-                  <pre className="bg-muted/10 text-muted-foreground p-4 rounded-md overflow-x-auto text-sm font-mono my-4">
-                    <code {...props}>{children}</code>
-                  </pre>
-                );
-              },
-
-              table({ children }) {
-                return (
-                  <div className="overflow-x-auto w-full my-6 rounded-lg border border-accent/20">
-                    <table className="w-full table-auto border-collapse text-left text-sm text-muted-foreground">
-                      {children}
-                    </table>
-                  </div>
-                );
-              },
-
-              thead({ children }) {
-                return (
-                  <thead className="bg-accent/10 text-accent">{children}</thead>
-                );
-              },
-
-              tr({ children }) {
-                return (
-                  <tr className="border-b border-muted/10 hover:bg-muted/5 transition-colors">
-                    {children}
-                  </tr>
-                );
-              },
-
-              th({ children }) {
-                return (
-                  <th className="px-4 py-3 font-semibold border-b border-muted/20 whitespace-nowrap">
-                    {children}
-                  </th>
-                );
-              },
-
-              td({ children }) {
-                return (
-                  <td className="px-4 py-3 border-b border-muted/10 whitespace-nowrap">
-                    {children}
-                  </td>
-                );
-              },
-
-              img({ src, alt, ...props }) {
-                return (
-                  <div className="w-full max-w-2xl mx-auto my-4 overflow-hidden rounded-md border border-muted/20">
-                    <img
-                      src={src}
-                      alt={alt}
-                      className="w-full h-auto object-contain"
-                      {...props}
-                    />
-                  </div>
-                );
-              },
-            }}
-          >
-            {generatedPlan}
-          </ReactMarkdown>
+                      remarkPlugins={[remarkMath, remarkGfm]}
+                      rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                      components={{
+                        // Enhanced code block rendering
+                        code({ node, className, children, ...props }) {
+                          // node is a Code AST node, which has an 'inline' property
+                          // See: https://github.com/remarkjs/react-markdown#use-custom-components
+                          // @ts-ignore
+                          const isInline = node && (node.inline === true);
+                          const match = /language-(\w+)/.exec(className || '')
+                          const language = match ? match[1] : ''
+                          
+                          if (isInline) {
+                            return (
+                              <code 
+                                className="bg-gray-900 px-2 py-1 rounded text-xs font-mono border border-gray-700" 
+                                {...props}
+                              >
+                                {children}
+                              </code>
+                            )
+                          }
+                          
+                          return (
+                            <div className="relative mt-3 mb-3 rounded-lg overflow-hidden border border-gray-700">
+                              {language && (
+                                <div className="bg-gray-900 px-3 py-2 text-xs text-gray-300 border-b border-gray-700 flex justify-between items-center">
+                                  <span className="font-medium">{language}</span>
+                                  <button
+                                    onClick={() => handleCopy(String(children), 1)}
+                                    className="p-1 bg-gray-700 hover:bg-gray-600 rounded transition text-gray-300 hover:text-white"
+                                    aria-label="Copy code"
+                                  >
+                                    {copiedIndex === 1 ? <Check size={12} /> : <Copy size={12} />}
+                                  </button>
+                                </div>
+                              )}
+                              <pre className="overflow-x-auto bg-gray-900 p-4 text-gray-100 text-xs leading-relaxed">
+                                <code className={className} {...props}>
+                                  {children}
+                                </code>
+                              </pre>
+                              {!language && (
+                                <button
+                                  onClick={() => handleCopy(String(children), 1)}
+                                  className="absolute top-2 right-2 p-1 bg-gray-700 hover:bg-gray-600 rounded transition"
+                                  aria-label="Copy code"
+                                >
+                                  {copiedIndex === 1 ? <Check size={12} /> : <Copy size={12} />}
+                                </button>
+                              )}
+                            </div>
+                          )
+                        },
+                        
+                        // Enhanced heading styles
+                        h1: ({children}) => <h1 className="text-xl font-bold text-accent mb-3 mt-4">{children}</h1>,
+                        h2: ({children}) => <h2 className="text-lg font-bold text-accent mb-2 mt-3">{children}</h2>,
+                        h3: ({children}) => <h3 className="text-md font-semibold text-accent mb-2 mt-3">{children}</h3>,
+                        
+                        // Enhanced list styles
+                        ul: ({children}) => <ul className="list-disc list-inside space-y-1 ml-2">{children}</ul>,
+                        ol: ({children}) => <ol className="list-decimal list-inside space-y-1 ml-2">{children}</ol>,
+                        li: ({children}) => <li className="text-gray-200">{children}</li>,
+                        
+                        
+                        blockquote: ({children}) => (
+                          <blockquote className="border-l-4 border-accent pl-4 py-2 bg-gray-700/50 rounded-r italic text-gray-200 my-3">
+                            {children}
+                          </blockquote>
+                        ),
+                        
+                        // Enhanced table styles
+                        table: ({children}) => (
+                          <div className="overflow-x-auto my-3">
+                            <table className="w-full border-collapse border border-gray-600 rounded">
+                              {children}
+                            </table>
+                          </div>
+                        ),
+                        th: ({children}) => (
+                          <th className="border border-gray-600 px-3 py-2 bg-gray-700 font-semibold text-left">
+                            {children}
+                          </th>
+                        ),
+                        td: ({children}) => (
+                          <td className="border border-gray-600 px-3 py-2">{children}</td>
+                        ),
+                        
+                        // Enhanced paragraph spacing
+                        p: ({children}) => <p className="text-gray-200 leading-relaxed mb-2">{children}</p>,
+                        
+                        // Strong/bold text
+                        strong: ({children}) => <strong className="font-bold text-white">{children}</strong>,
+                        
+                        // Enhanced link styles
+                        a: ({href, children}) => (
+                          <a 
+                            href={href} 
+                            className="text-accent hover:text-accent/80 underline transition-colors"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {children}
+                          </a>
+                        ),
+                      }}
+                    >
+                      
+          {generatedPlan}
+                    </ReactMarkdown>
 
           {mermaidBlocks.map((code, idx) => (
             <div key={idx} className="w-full overflow-x-auto my-6">
@@ -531,15 +574,7 @@ export default function StudyPlanner() {
         </div>
 
         <div className="mt-5 pt-4 border-t border-accent/10 flex flex-wrap justify-end gap-4">
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(generatedPlan);
-              toast.success('Study plan copied to clipboard');
-            }}
-            className="flex items-center gap-2 px-4 py-2 rounded-md bg-accent/10 text-accent hover:bg-accent hover:text-white transition-all duration-200"
-          >
-            Copy Plan
-          </button>
+          
 
           <button
             onClick={handleSave}
