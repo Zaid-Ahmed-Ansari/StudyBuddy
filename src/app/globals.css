@@ -137,7 +137,18 @@
     }
   }
   
+  
 }
+.katex-display {
+          margin: 1.5rem auto;
+          text-align: center;
+          display: block;
+          font-weight: bold;
+          color: white;
+        }
+        .katex {
+          font-size: 1.2rem;
+        }
   .bg-chat-user {
     background: linear-gradient(135deg, #4c51bf, #2d3748); 
     color: white;
