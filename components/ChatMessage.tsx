@@ -10,6 +10,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import { UserAvatar } from './UserAvatar'
+import { BlockMath, InlineMath } from 'react-katex'
 
 interface MessageProps {
   msg: {
@@ -54,46 +55,118 @@ export const ChatMessage = memo(({
           <div className="prose prose-invert prose-sm max-w-none">
             {(!isThinking || msg.text) && (
               <ReactMarkdown
-                remarkPlugins={[remarkMath, remarkGfm]}
-                rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                components={{
-                  code({ node, className, children, ...props }) {
-                    // @ts-ignore
-                    const isInline = node && node.inline === true;
-                    const match = /language-(\w+)/.exec(className || '')
-                    const language = match ? match[1] : ''
-                    if (isInline) {
-                      return (
-                        <code className="bg-gray-900 px-2 py-1 rounded text-xs font-mono border border-gray-700" {...props}>
-                          {children}
-                        </code>
-                      )
-                    }
-
-                    return (
-                      <div className="relative mt-3 mb-3 rounded-lg overflow-hidden border border-gray-700">
-                        {language && (
-                          <div className="bg-gray-900 px-3 py-2 text-xs text-gray-300 border-b border-gray-700 flex justify-between items-center">
-                            <span className="font-medium">{language}</span>
-                            <button
-                              onClick={() => handleCopy(String(children), i)}
-                              className="p-1 bg-gray-700 hover:bg-gray-600 rounded transition text-gray-300 hover:text-white"
-                              aria-label="Copy code"
-                            >
-                              {copiedIndex === i ? <Check size={12} /> : <Copy size={12} />}
-                            </button>
-                          </div>
-                        )}
-                        <pre className="overflow-x-auto bg-gray-900 p-4 text-gray-100 text-xs leading-relaxed">
-                          <code className={className} {...props}>{children}</code>
-                        </pre>
-                      </div>
-                    )
-                  },
-                }}
-              >
-                {msg.text}
-              </ReactMarkdown>
+                                    remarkPlugins={[remarkMath, remarkGfm]}
+                                    rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                    components={{
+                                      // Enhanced code block rendering
+                                      code({ node, className, children, ...props }) {
+                                        // node is a Code AST node, which has an 'inline' property
+                                        // See: https://github.com/remarkjs/react-markdown#use-custom-components
+                                        // @ts-ignore
+                                        const isInline = node && (node.inline === true);
+                                        const match = /language-(\w+)/.exec(className || '')
+                                        const language = match ? match[1] : ''
+                                        
+                                        if (isInline) {
+                                          return (
+                                            <code 
+                                              className="bg-gray-900 px-2 py-1 rounded text-xs font-mono border border-gray-700" 
+                                              {...props}
+                                            >
+                                              {children}
+                                            </code>
+                                          )
+                                        }
+                                        
+                                        return (
+                                          <div className="relative mt-3 mb-3 rounded-lg overflow-hidden border border-gray-700">
+                                            {language && (
+                                              <div className="bg-gray-900 px-3 py-2 text-xs text-gray-300 border-b border-gray-700 flex justify-between items-center">
+                                                <span className="font-medium">{language}</span>
+                                                <button
+                                                  onClick={() => handleCopy(String(children), i)}
+                                                  className="p-1 bg-gray-700 hover:bg-gray-600 rounded transition text-gray-300 hover:text-white"
+                                                  aria-label="Copy code"
+                                                >
+                                                  {copiedIndex === i ? <Check size={12} /> : <Copy size={12} />}
+                                                </button>
+                                              </div>
+                                            )}
+                                            <pre className="overflow-x-auto bg-gray-900 p-4 text-gray-100 text-xs leading-relaxed">
+                                              <code className={className} {...props}>
+                                                {children}
+                                              </code>
+                                            </pre>
+                                            {!language && (
+                                              <button
+                                                onClick={() => handleCopy(String(children), i)}
+                                                className="absolute top-2 right-2 p-1 bg-gray-700 hover:bg-gray-600 rounded transition"
+                                                aria-label="Copy code"
+                                              >
+                                                {copiedIndex === i ? <Check size={12} /> : <Copy size={12} />}
+                                              </button>
+                                            )}
+                                          </div>
+                                        )
+                                      },
+                                      
+                                      // Enhanced heading styles
+                                      h1: ({children}) => <h1 className="text-xl font-bold text-accent mb-3 mt-4">{children}</h1>,
+                                      h2: ({children}) => <h2 className="text-lg font-bold text-accent mb-2 mt-3">{children}</h2>,
+                                      h3: ({children}) => <h3 className="text-md font-semibold text-accent mb-2 mt-3">{children}</h3>,
+                                      
+                                      // Enhanced list styles
+                                      ul: ({children}) => <ul className="list-disc list-inside space-y-1 ml-2">{children}</ul>,
+                                      ol: ({children}) => <ol className="list-decimal list-inside space-y-1 ml-2">{children}</ol>,
+                                      li: ({children}) => <li className="text-gray-200">{children}</li>,
+                                      
+                                      
+                                      blockquote: ({children}) => (
+                                        <blockquote className="border-l-4 border-accent pl-4 py-2 bg-gray-700/50 rounded-r italic text-gray-200 my-3">
+                                          {children}
+                                        </blockquote>
+                                      ),
+                                      
+                                      // Enhanced table styles
+                                      table: ({children}) => (
+                                        <div className="overflow-x-auto my-3">
+                                          <table className="w-full border-collapse border border-gray-600 rounded">
+                                            {children}
+                                          </table>
+                                        </div>
+                                      ),
+                                      th: ({children}) => (
+                                        <th className="border border-gray-600 px-3 py-2 bg-gray-700 font-semibold text-left">
+                                          {children}
+                                        </th>
+                                      ),
+                                      td: ({children}) => (
+                                        <td className="border border-gray-600 px-3 py-2">{children}</td>
+                                      ),
+                                      
+                                      // Enhanced paragraph spacing
+                                      p: ({children}) => <p className="text-gray-200 leading-relaxed mb-4">{children}</p>,
+                                      
+                                      // Strong/bold text
+                                      strong: ({children}) => <strong className="font-bold text-white">{children}</strong>,
+                                      
+                                      // Enhanced link styles
+                                      a: ({href, children}) => (
+                                        <a 
+                                          href={href} 
+                                          className="text-accent hover:text-accent/80 underline transition-colors"
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                        >
+                                          {children}
+                                        </a>
+                                      ),
+                                     
+                                    }}
+                                  >
+                                    
+                        {msg.text}
+                                  </ReactMarkdown>
             )}
           </div>
 
