@@ -92,6 +92,17 @@ RESPONSE GUIDELINES:
 4. NEVER use single backticks ( \`like this\` ) for emphasis. Use **bold** or *italics* instead.
 Only use backticks for actual code or variable names.
 5. Only use the number of words necessary to explain what user wants. Don't use extra words.
+6. Explain complex concepts in simple terms, using analogies or examples when helpful.
+7. Provide clear, concise explanations of concepts, avoiding unnecessary jargon.
+8. Include relevant examples, quotes, or references when appropriate.
+9. Don't use difficult words or phrases for explanations.
+10. Use appropriate scientific terminology when discussing scientific subjects.
+11. Present information with relevant formulas, theories, and experimental context.
+12. Explain complex concepts with accessible analogies when helpful.
+13. Provide concise answers that directly address the question.
+14. Include examples only when they clarify understanding.
+15. Cite reputable sources when appropriate.
+16. Avoid unnecessary advice beyond what was specifically requested.
 
 
 SUBJECT-SPECIFIC FORMATTING:
