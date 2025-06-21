@@ -1,14 +1,10 @@
 'use client'
 import React, { memo, useCallback, useMemo } from 'react';
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, Check, Send, X, ArrowDown, BookmarkCheck, Bot, User, Save } from 'lucide-react'
+import {  AnimatePresence } from 'framer-motion'
+import {  Send, X, ArrowDown, Bot, Paperclip } from 'lucide-react'
 import axios from 'axios'
-import ReactMarkdown from 'react-markdown'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeKatex from 'rehype-katex'
-import remarkMath from 'remark-math'
-import remarkGfm from 'remark-gfm'
+
 import 'highlight.js/styles/github-dark.css'
 import 'katex/dist/katex.min.css'
 import { UserAvatar } from './UserAvatar'
@@ -19,35 +15,118 @@ import { ChatMessage } from './ChatMessage'
 
 
 
+
+
+
+
 const ChatInput = memo(function ChatInput({
   input,
   setInput,
   handleSendMessage,
   isThinking,
-  handleAbort
+  handleAbort,
 }: {
   input: string;
   setInput: (val: string) => void;
-  handleSendMessage: (msg: string) => void;
+  handleSendMessage: (msg: string, file?: File | null) => void;
   isThinking: boolean;
   handleAbort: () => void;
 }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setFile(file);
+  };
+
+  const setFile = (file: File | null) => {
+    setSelectedFile(file);
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData.items;
+    for (let item of items) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const blob = item.getAsFile();
+        if (blob) {
+          setFile(blob);
+          e.preventDefault();
+        }
+        break;
+      }
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSendMessage(input, selectedFile);
+    setInput('');
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
+
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        handleSendMessage(input);
-      }}
+      onSubmit={handleSubmit}
       className="flex items-center gap-3 rounded-full bg-gray-800 p-2 border border-gray-700 shadow-lg max-w-4xl mx-auto"
     >
       <input
+        ref={textInputRef}
         type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Ask a question..."
-        className="flex-1 bg-transparent px-4 py-2 rounded-full focus:outline-none placeholder-gray-400 text-sm"
+        onPaste={handlePaste}
+        placeholder="Ask a question or paste an image..."
+        className="flex-1 bg-transparent px-4 py-2 rounded-full focus:outline-none placeholder-gray-400 text-sm text-white"
       />
-      <div className="flex gap-2 items-center">
+
+      <input
+        type="file"
+        accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.webp"
+        onChange={handleFileChange}
+        ref={fileInputRef}
+        className="hidden"
+      />
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleFileClick}
+          className="p-2 bg-gray-700 hover:bg-gray-600 rounded-full text-white transition-all duration-200 hover:scale-105 active:scale-95"
+          title="Attach file"
+        >
+          <Paperclip size={18} />
+        </button>
+
+        {selectedFile && (
+          <div className="text-xs text-gray-300 max-w-[150px] truncate flex items-center gap-1">
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-6 h-6 object-cover rounded"
+              />
+            )}
+            {selectedFile.name}
+          </div>
+        )}
+
         {isThinking && (
           <button
             onClick={handleAbort}
@@ -58,9 +137,10 @@ const ChatInput = memo(function ChatInput({
             <X size={18} />
           </button>
         )}
+
         <button
           type="submit"
-          disabled={isThinking || !input.trim()}
+          disabled={isThinking || (!input.trim() && !selectedFile)}
           className="p-2 bg-indigo-600 hover:bg-indigo-500 rounded-full text-white transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
           aria-label="Send"
         >
@@ -70,6 +150,9 @@ const ChatInput = memo(function ChatInput({
     </form>
   );
 });
+
+
+
 
 
 export default function AiChat({chatId, userId}: {chatId: string, userId: string}) {
@@ -135,7 +218,7 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
     );
   };
 
-  const handleSendMessage = async (userMessage: string) => {
+  const handleSendMessage = async (userMessage: string, file?: File |   null) => {
     if (!userMessage.trim()) return;
     const contextMessages = messages.slice(-10);
     const formattedContext = contextMessages.map(msg => ({
@@ -157,11 +240,17 @@ export default function AiChat({chatId, userId}: {chatId: string, userId: string
     ]);
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
+      const formData = new FormData();
+      formData.append("prompt", userMessage);
+      formData.append("context", JSON.stringify(formattedContext));
+      if (file) {
+        formData.append("file", file);
+      }
+  
+      const res = await fetch("/api/chat", {
+        method: "POST",
         signal: controller.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userMessage, context: formattedContext})
+        body: formData,
       });
 
       if (!res.body) throw new Error('No response body');

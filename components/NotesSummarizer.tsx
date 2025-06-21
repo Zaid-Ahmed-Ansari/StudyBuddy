@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import * as mammoth from "mammoth";
 import ReactMarkdown from "react-markdown";
@@ -17,17 +17,26 @@ import {
   Save, 
   Loader2,
   ChevronDown,
-  NotebookText
+  NotebookText,
+  Check,
+  Copy
 } from "lucide-react";
+import remarkMath from "remark-math";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import rehypeKatex from "rehype-katex";
 
 // Set PDF.js worker
+// ...imports unchanged
 GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.0.375/pdf.worker.min.mjs`;
 
 export default function NotesSummarizer() {
   const [inputMode, setInputMode] = useState<"pdf" | "text">("pdf");
+  const [summaryMode, setSummaryMode] = useState<"local" | "gemini">("local");
   const [files, setFiles] = useState<File[]>([]);
   const [manualText, setManualText] = useState("");
   const [summary, setSummary] = useState("");
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [loading, setLoading] = useState(false);
   const [progressText, setProgressText] = useState("");
   const [progressPercent, setProgressPercent] = useState(0);
@@ -37,7 +46,6 @@ export default function NotesSummarizer() {
 
   const extractTextFromFile = async (file: File): Promise<string> => {
     const ext = file.name.split(".").pop()?.toLowerCase();
-
     if (ext === "pdf") {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await getDocument({ data: arrayBuffer }).promise;
@@ -49,7 +57,6 @@ export default function NotesSummarizer() {
 
       for (let i = 1; i <= totalPages; i++) {
         const pageStart = Date.now();
-
         setProgressText(`Processing page ${i} of ${totalPages}`);
         setProgressPercent(Math.round((i / totalPages) * 100));
 
@@ -74,7 +81,7 @@ export default function NotesSummarizer() {
 
         const timeTaken = Date.now() - pageStart;
         const pagesLeft = totalPages - i;
-        setEstimatedTime(Math.ceil((timeTaken * pagesLeft) / 1000)); // in seconds
+        setEstimatedTime(Math.ceil((timeTaken * pagesLeft) / 1000));
       }
 
       await worker.terminate();
@@ -89,7 +96,11 @@ export default function NotesSummarizer() {
 
     throw new Error("Unsupported file type.");
   };
-
+  const handleCopy = useCallback((text: string, index: number) => {
+    navigator.clipboard.writeText(text)
+    setCopiedIndex(index)
+    setTimeout(() => setCopiedIndex(null), 1200)
+  }, [])
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -97,50 +108,63 @@ export default function NotesSummarizer() {
     setProgressText("");
     setProgressPercent(0);
     setEstimatedTime(null);
-
-    let inputText = "";
-
-    if (inputMode === "pdf") {
-      if (files.length === 0) {
-        setError("Please upload at least one PDF, DOC, or DOCX file.");
-        return;
-      }
-
-      setLoading(true);
-      try {
-        for (const file of files) {
-          inputText += await extractTextFromFile(file);
-          inputText += "\n\n";
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Failed to extract text from one or more files.");
-        setLoading(false);
-        return;
-      }
-    } else {
-      if (!manualText.trim()) {
-        setError("Please enter some text to summarize.");
-        return;
-      }
-      inputText = manualText;
-      setLoading(true);
-    }
-
+    setLoading(true);
+  
     try {
-      const res = await fetch("/api/summarizer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText }),
-      });
-
-      if (!res.ok) throw new Error("Failed to fetch summary");
-
-      const data = await res.json();
-      setSummary(data.text || "No summary returned.");
-      setSummaryExpanded(true);
-    } catch (e) {
-      console.error(e);
+      if (summaryMode === "gemini") {
+        if (files.length === 0) {
+          setError("Please upload at least one file.");
+          setLoading(false);
+          return;
+        }
+  
+        const formData = new FormData();
+        formData.append("file", files[0]); // only send one for Gemini
+  
+        const res = await fetch("/api/summarizer", {
+          method: "POST",
+          body: formData,
+        });
+  
+        if (!res.ok) throw new Error("Failed to summarize with Gemini.");
+        const data = await res.json();
+        setSummary(data.text || "No summary returned.");
+        setSummaryExpanded(true);
+      } else {
+        let inputText = "";
+        if (inputMode === "pdf") {
+          if (files.length === 0) {
+            setError("Please upload at least one PDF or DOCX file.");
+            setLoading(false);
+            return;
+          }
+  
+          for (const file of files) {
+            inputText += await extractTextFromFile(file);
+            inputText += "\n\n";
+          }
+        } else {
+          if (!manualText.trim()) {
+            setError("Please enter some text to summarize.");
+            setLoading(false);
+            return;
+          }
+          inputText = manualText;
+        }
+  
+        const res = await fetch("/api/summarizer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: inputText }),
+        });
+  
+        if (!res.ok) throw new Error("Failed to summarize text.");
+        const data = await res.json();
+        setSummary(data.text || "No summary returned.");
+        setSummaryExpanded(true);
+      }
+    } catch (err) {
+      console.error(err);
       setError("Error generating summary.");
     } finally {
       setLoading(false);
@@ -149,17 +173,14 @@ export default function NotesSummarizer() {
       setEstimatedTime(null);
     }
   };
+  
 
   const handleSave = async (message: string) => {
     try {
-      await axios.post(
-        "/api/user/save",
-        {
-          content: message,
-          contentType: "markdown",
-        },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      await axios.post("/api/user/save", {
+        content: message,
+        contentType: "markdown",
+      });
       toast.success("Saved Successfully. Visit your dashboard to see it.");
     } catch (err) {
       console.error("Save failed:", err);
@@ -171,17 +192,49 @@ export default function NotesSummarizer() {
     <main className="min-h-screen flex justify-center py-14 px-4">
       <div className="w-full max-w-2xl">
         <div className="bg-card text-card-foreground rounded-2xl shadow-lg border border-accent/10 overflow-hidden">
-          {/* Header */}
           <div className="bg-accent/5 px-6 py-5 border-b border-accent/10">
             <h1 className="text-3xl font-bold flex items-center justify-center gap-2 text-accent">
               <NotebookText className="w-7 h-7" />
               <span>Notes Summarizer</span>
             </h1>
           </div>
-          
-          {/* Content */}
+
           <div className="p-6">
-            {/* Input Mode Selector */}
+            {/* Summarization Mode Toggle */}
+            <div className="mb-4 space-y-2">
+              <label className="block font-medium text-sm text-muted-foreground">Summarization Mode</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSummaryMode("local")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                    summaryMode === "local"
+                      ? "bg-accent text-white"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  Local text read
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSummaryMode("gemini")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                    summaryMode === "gemini"
+                      ? "bg-accent text-white"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  Gemini(20MB MAX LIMIT)
+                </button>
+              </div>
+              <p className="text-xs font-bold text-muted-foreground mt-1">
+                {summaryMode === "local"
+                  ? "Best for no images and clean tabular/typed documents."
+                  : "Ideal for complex documents, mobile use, and image-heavy notes."}
+              </p>
+            </div>
+
+            {/* Input Type Toggle */}
             <div className="flex justify-center gap-3 mb-6 bg-muted/30 p-1 rounded-lg">
               <button
                 type="button"
@@ -210,11 +263,10 @@ export default function NotesSummarizer() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Input Area */}
               <div className="rounded-lg border border-input bg-background">
                 {inputMode === "pdf" && (
                   <div className="p-1">
-                    <FileInput onFilesSelect={setFiles} />
+                    <FileInput onFilesSelect={setFiles} summaryMode={summaryMode} />
                   </div>
                 )}
                 {inputMode === "text" && (
@@ -227,17 +279,15 @@ export default function NotesSummarizer() {
                   />
                 )}
               </div>
-              
-              {/* Error Message */}
+
               {error && (
                 <div className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm flex items-start">
                   <span className="mr-2 mt-0.5">⚠️</span>
                   {error}
                 </div>
               )}
-              
-              {/* Progress Bar */}
-              {loading && (
+
+              {loading && summaryMode === "local" && (
                 <div className="w-full bg-muted/30 p-4 rounded-lg border border-accent/10 animate-pulse">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-accent flex items-center gap-1.5">
@@ -262,8 +312,7 @@ export default function NotesSummarizer() {
                   </div>
                 </div>
               )}
-              
-              {/* Submit Button */}
+
               <button
                 type="submit"
                 disabled={loading}
@@ -280,7 +329,6 @@ export default function NotesSummarizer() {
               </button>
             </form>
 
-            {/* Summary Results */}
             {summary && (
               <div className="mt-8 animate-fadeIn">
                 <div 
@@ -295,13 +343,51 @@ export default function NotesSummarizer() {
                     <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${summaryExpanded ? 'rotate-180' : ''}`} />
                   </button>
                 </div>
-                
                 {summaryExpanded && (
                   <div className="border border-t-0 border-accent/10 rounded-b-lg p-5 bg-white/5">
                     <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <ReactMarkdown>{summary}</ReactMarkdown>
+                    <ReactMarkdown
+                remarkPlugins={[remarkMath, remarkGfm]}
+                rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                components={{
+                  code({ node, className, children, ...props }) {
+                    // @ts-ignore
+                    const isInline = node && node.inline === true;
+                    const match = /language-(\w+)/.exec(className || '')
+                    const language = match ? match[1] : ''
+                    if (isInline) {
+                      return (
+                        <code className="bg-gray-900 px-2 py-1 rounded text-xs font-mono border border-gray-700" {...props}>
+                          {children}
+                        </code>
+                      )
+                    }
+
+                    return (
+                      <div className="relative mt-3 mb-3 rounded-lg overflow-hidden border border-gray-700">
+                        {language && (
+                          <div className="bg-gray-900 px-3 py-2 text-xs text-gray-300 border-b border-gray-700 flex justify-between items-center">
+                            <span className="font-medium">{language}</span>
+                            <button
+                              onClick={() => handleCopy(String(children), 1)}
+                              className="p-1 bg-gray-700 hover:bg-gray-600 rounded transition text-gray-300 hover:text-white"
+                              aria-label="Copy code"
+                            >
+                              {copiedIndex === 1 ? <Check size={12} /> : <Copy size={12} />}
+                            </button>
+                          </div>
+                        )}
+                        <pre className="overflow-x-auto bg-gray-900 p-4 text-gray-100 text-xs leading-relaxed">
+                          <code className={className} {...props}>{children}</code>
+                        </pre>
+                      </div>
+                    )
+                  },
+                }}
+              >
+                {summary}
+              </ReactMarkdown>
                     </div>
-                    
                     <div className="mt-5 pt-4 border-t border-accent/10 flex justify-end">
                       <button
                         onClick={() => handleSave(summary)}
@@ -317,12 +403,10 @@ export default function NotesSummarizer() {
             )}
           </div>
         </div>
-        
-        {/* Footer */}
         <div className="mt-4 text-center text-xs text-muted-foreground">
           Supports PDF, DOC, and DOCX files with OCR capabilities
         </div>
       </div>
     </main>
   );
-} 
+}

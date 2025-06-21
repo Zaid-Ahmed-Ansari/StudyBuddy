@@ -2,19 +2,27 @@
 
 import { useState, useCallback } from "react";
 import { Upload, FileText, X } from "lucide-react";
+import { toast } from "sonner";
 
 export default function FileInput({
   onFilesSelect,
+  summaryMode,
 }: {
   onFilesSelect: (files: File[]) => void;
+  summaryMode: "local" | "gemini";
 }) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
   const processFiles = (files: File[]) => {
-    const allowedFiles = files.filter(file =>
-      ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(file.type)
-    );
+    const twentyMB = 20 * 1024 * 1024;
+    const allowedFiles = files.filter(file => {
+      if (summaryMode === "gemini" && file.size > twentyMB) {
+        toast.error(`File "${file.name}" is larger than 20MB and was not added.`);
+        return false;
+      }
+      return ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(file.type);
+    });
 
     const newFiles = [...selectedFiles, ...allowedFiles].filter(
       (file, index, self) => index === self.findIndex(f => f.name === file.name)
