@@ -24,16 +24,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'StudyBuddy - Interactive Learning Tools',
-    template: '%s | StudyBuddy'
+    default: 'Study Club - Interactive Learning Tools',
+    template: '%s | Study Club'
   },
-  description: 'Access StudyBuddy\'s interactive learning tools including AI chat, study planning, visual generation, and note-taking features.',
+  description: 'Access Study Club\'s interactive learning tools including AI chat, study planning, visual generation, and note-taking features.',
   keywords: 'study tools, AI learning, interactive study, study planning, visual learning, note taking',
   openGraph: {
-    title: 'StudyBuddy - Interactive Learning Tools',
-    description: 'Access StudyBuddy\'s interactive learning tools including AI chat, study planning, visual generation, and note-taking features.',
-    url: 'https://studybuddy.rest',
-    siteName: 'StudyBuddy',
+    title: 'Study Club - Interactive Learning Tools',
+    description: 'Access Study Club\'s interactive learning tools including AI chat, study planning, visual generation, and note-taking features.',
+    url: 'https://studybuddy.rest/study-club',
+    siteName: 'Study Club',
     locale: 'en_US',
     type: 'website',
   },
@@ -62,14 +62,7 @@ const jsonLd = {
     price: '0',
     priceCurrency: 'USD'
   },
-  featureList: [
-    'AI-powered chat assistance',
-    'Study planning tools',
-    'Visual diagram generation',
-    'Note taking and summarization',
-    'Interactive study groups',
-    'Real-time collaboration'
-  ],
+  
   url: 'https://studybuddy.rest',
   author: {
     '@type': 'Person',
@@ -89,7 +82,8 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased `}
         >
           <AuthProvider>
-       <StreamVideoProvider>
+            <StreamVideoProvider>
+       
         
           <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-zinc-900 to-accent dark:from-black dark:via-zinc-800/40 dark:to-black px-4">
             

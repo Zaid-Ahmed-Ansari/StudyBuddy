@@ -249,7 +249,7 @@ export default function StudyClubActivitiesPage() {
   }
 
   return (
-    
+    <StreamVideoProvider>
     <div className="h-screen overflow-hidden flex flex-col">
       <div className="flex h-screen">
         {/* Main Content Area */}
@@ -438,6 +438,7 @@ export default function StudyClubActivitiesPage() {
       </AnimatePresence>
       
     </div>
+    </StreamVideoProvider>
     
   )
 }
